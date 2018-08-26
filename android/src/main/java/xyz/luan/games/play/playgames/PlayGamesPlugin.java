@@ -107,7 +107,7 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
   }
 
   private String getIdByName(String name) {
-    Context ctx = registrar.conte`xt();
+    Context ctx = registrar.context();
     int resId = ctx.getResources().getIdentifier(name, "string", ctx.getPackageName());
     return ctx.getString(resId);
   }
