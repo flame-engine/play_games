@@ -8,9 +8,9 @@ const MethodChannel _channel = const MethodChannel('play_games');
 
 enum SigninResultType {
   SUCCESS,
-  ERROR,
-  ERROR_2,
-  IOS
+  ERROR_SIGNIN,
+  ERROR_FETCH_PLAYER_PROFILE,
+  ERROR_IOS
 }
 
 SigninResultType _typeFromStr(String value) {

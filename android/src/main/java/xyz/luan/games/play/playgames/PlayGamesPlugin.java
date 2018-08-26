@@ -16,6 +16,8 @@ import android.net.Uri;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
+import android.support.annotation.NonNull;
 
 import com.google.android.gms.common.images.ImageManager;
 
@@ -34,6 +36,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 
 public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListener {
 
+  private static final String TAG = PlayGamesPlugin.class.getCanonicalName();
   private static final int RC_SIGN_IN = 1;
 
   private Registrar registrar;
@@ -69,8 +72,7 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
     if (call.method.equals("signIn")) {
       GoogleSignInOptions opts = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_GAMES_SIGN_IN).requestEmail().build();
       GoogleSignInClient signInClient = GoogleSignIn.getClient(registrar.activity(), opts);
-      Intent intent = signInClient.getSignInIntent();
-      registrar.activity().startActivityForResult(intent, RC_SIGN_IN);
+      silentSignIn(signInClient);
     } else if (call.method.equals("getHiResImage")) {
       getHiResImage();
     } else if (call.method.equals("getIconImage")) {
@@ -81,9 +83,64 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
     }
   }
 
+  private void explicitSignIn(GoogleSignInClient signInClient) {
+    Intent intent = signInClient.getSignInIntent();
+    registrar.activity().startActivityForResult(intent, RC_SIGN_IN);
+  }
+
+  private void silentSignIn(final GoogleSignInClient signInClient) {
+    signInClient.silentSignIn().addOnSuccessListener(new OnSuccessListener<GoogleSignInAccount>() {
+      @Override
+      public void onSuccess(GoogleSignInAccount googleSignInAccount) {
+        handleSuccess(googleSignInAccount);
+      }
+    }).addOnFailureListener(new OnFailureListener() {
+        @Override
+        public void onFailure(@NonNull Exception e) {
+          Log.i(TAG, "Failed to silent signin, trying explicit signin", e);
+          explicitSignIn(signInClient);
+        }
+    });
+  }
+
+  private void handleSuccess(GoogleSignInAccount acc) {
+    currentAccount = acc;
+    PlayersClient playersClient = Games.getPlayersClient(registrar.activity(), currentAccount);
+    playersClient.getCurrentPlayer().addOnSuccessListener(new OnSuccessListener<Player>() {
+      @Override
+      public void onSuccess(Player player) {
+        Map<String, Object> successMap = new HashMap<>();
+        successMap.put("type", "SUCCESS");
+        successMap.put("id", player.getPlayerId());
+        successMap.put("email", currentAccount.getEmail());
+        successMap.put("displayName", player.getDisplayName());
+        successMap.put("hiResImageUri", player.getHiResImageUri().toString());
+        successMap.put("iconImageUri", player.getIconImageUri().toString());
+        result(successMap);
+      }
+    }).addOnFailureListener(new OnFailureListener() {
+      @Override
+      public void onFailure(Exception e) {
+        error("ERROR_FETCH_PLAYER_PROFILE", e);
+      }
+    });
+  }
+
   private void result(Map<String, Object> response) {
     pendingOperation.result.success(response);
     pendingOperation = null;
+  }
+
+  private void error(String type, Throwable e) {
+    Log.e(TAG, "Unexpected error on " + type, e);
+    error(type, e.getMessage());
+  }
+
+  private void error(String type, String message) {
+    Map<String, Object> errorMap = new HashMap<>();
+    errorMap.put("type", type);
+    errorMap.put("message", message);
+    result(errorMap);
   }
 
   private void getHiResImage() {
@@ -133,39 +190,13 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
     }
     GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
     if (result.isSuccess()) {
-      currentAccount = result.getSignInAccount();
-      PlayersClient playersClient = Games.getPlayersClient(registrar.activity(), currentAccount);
-      playersClient.getCurrentPlayer().addOnSuccessListener(new OnSuccessListener<Player>() {
-        @Override
-        public void onSuccess(Player player) {
-          Map<String, Object> successMap = new HashMap<>();
-          successMap.put("type", "SUCCESS");
-          successMap.put("id", player.getPlayerId());
-          successMap.put("email", currentAccount.getEmail());
-          successMap.put("displayName", player.getDisplayName());
-          successMap.put("hiResImageUri", player.getHiResImageUri().toString());
-          successMap.put("iconImageUri", player.getIconImageUri().toString());
-          result(successMap);
-        }
-      }).addOnFailureListener(new OnFailureListener() {
-        @Override
-        public void onFailure(Exception e) {
-          Map<String, Object> errorMap = new HashMap<>();
-          errorMap.put("type", "ERROR_2");
-          // TODO log e
-          errorMap.put("message", e.getMessage());
-          result(errorMap);
-        }
-      });
+      handleSuccess(result.getSignInAccount());
     } else {
-      Map<String, Object> errorMap = new HashMap<>();
-      errorMap.put("type", "ERROR");
       String message = result.getStatus().getStatusMessage();
       if (message == null || message.isEmpty()) {
           message = "Unexpected error " + result.getStatus();
       }
-      errorMap.put("message", message);
-      result(errorMap);
+      error("ERROR_SIGNIN", message);
     }
     return true;
   }
