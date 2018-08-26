@@ -1,10 +1,15 @@
 import 'dart:async';
+import 'dart:typed_data';
+import 'dart:ui';
 
 import 'package:flutter/services.dart';
+
+const MethodChannel _channel = const MethodChannel('play_games');
 
 enum SigninResultType {
   SUCCESS,
   ERROR,
+  ERROR_2,
   IOS
 }
 
@@ -24,12 +29,26 @@ class Account {
   String id;
   String displayName;
   String email;
-  String avatar;
+  String hiResImageUri;
+  String iconImageUri;
+
+  Future<Image> get hiResImage async => await _fetchToMemory(await _channel.invokeMethod('getHiResImage'));
+  Future<Image> get iconImage async => await _fetchToMemory(await _channel.invokeMethod('getIconImage'));
+ 
+}
+
+Future<Image> _fetchToMemory(Map<dynamic, dynamic> result) {
+  Uint8List bytes = result['bytes'];
+  if (bytes == null) {
+    print('was null, mate');
+    return Future.value(null);
+  }
+  Completer<Image> completer = new Completer();
+  decodeImageFromList(bytes, (image) => completer.complete(image));
+  return completer.future;
 }
 
 class PlayGames {
-  static const MethodChannel _channel = const MethodChannel('play_games');
-
   static Future<SigninResult> signIn() async {
     final Map<dynamic, dynamic> map = await _channel.invokeMethod('signIn');
     SigninResultType type = _typeFromStr(map['type']);
@@ -39,7 +58,8 @@ class PlayGames {
         ..id = map['id']
         ..displayName = map['displayName']
         ..email = map['email']
-        ..avatar = map['avatar'];
+        ..hiResImageUri = map['hiResImageUri']
+        ..iconImageUri = map['iconImageUri'];
     } else {
       result.message = map['message'];
     }
