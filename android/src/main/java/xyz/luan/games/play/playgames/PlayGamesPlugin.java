@@ -30,6 +30,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 
 import com.google.android.gms.games.Games;
+import com.google.android.gms.games.GamesClient;
 import com.google.android.gms.games.Player;
 import com.google.android.gms.games.PlayersClient;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -95,6 +96,10 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
       String name = call.argument("name");
       int amount = call.argument("amount");
       incrementAchievement(getIdByName(name), amount);
+    } else if (call.method.equals("setPopupOptions")) {
+      boolean show = call.argument("show");
+      int gravity = call.argument("gravity");
+      setPopupOptions(show, gravity);
     } else {
       pendingOperation = null;
       result.notImplemented();
@@ -102,19 +107,39 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
   }
 
   private String getIdByName(String name) {
-    Context ctx = registrar.context();
+    Context ctx = registrar.conte`xt();
     int resId = ctx.getResources().getIdentifier(name, "string", ctx.getPackageName());
     return ctx.getString(resId);
   }
 
   private void unlockAchievement(String id) {
-    Games.getAchievementsClient(registrar.activity(), currentAccount).unlock(id);
-    result(true);
+    Games.getAchievementsClient(registrar.activity(), currentAccount).unlockImmediate(id).addOnSuccessListener(new OnSuccessListener<Void>() {
+      @Override
+      public void onSuccess(Void a) {
+        result(true);
+      }
+    }).addOnFailureListener(new OnFailureListener() {
+      @Override
+      public void onFailure(@NonNull Exception e) {
+        Log.e(TAG, "Could not unlock achievement", e);
+        result(false);
+      }
+    });
   }
 
   private void incrementAchievement(String id, int amount) {
-    Games.getAchievementsClient(registrar.activity(), currentAccount).increment(id, amount);
-    result(true);
+    Games.getAchievementsClient(registrar.activity(), currentAccount).incrementImmediate(id, amount).addOnSuccessListener(new OnSuccessListener<Boolean>() {
+      @Override
+      public void onSuccess(Boolean b) {
+        result(true);
+      }
+    }).addOnFailureListener(new OnFailureListener() {
+      @Override
+      public void onFailure(@NonNull Exception e) {
+        Log.e(TAG, "Could not increment achievement", e);
+        result(false);
+      }
+    });
   }
 
   private void showAchievements() {
@@ -125,7 +150,23 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
         public void onSuccess(Intent intent) {
           registrar.activity().startActivityForResult(intent, RC_ACHIEVEMENT_UI);
         }
-      });
+      }).addOnFailureListener(new OnFailureListener() {
+        @Override
+        public void onFailure(@NonNull Exception e) {
+          error("ERROR_SHOW_ACHIEVEMENTS", e);
+        }
+    });
+  }
+
+  private void setPopupOptions(boolean show, int gravity) {
+    GamesClient gamesClient = Games.getGamesClient(registrar.activity(), currentAccount);
+    if (show) {
+      gamesClient.setViewForPopups(registrar.view());
+      gamesClient.setGravityForPopups(gravity);
+    } else {
+      gamesClient.setViewForPopups(null);
+    }
+    result(true);
   }
 
   private void explicitSignIn(GoogleSignInClient signInClient) {
