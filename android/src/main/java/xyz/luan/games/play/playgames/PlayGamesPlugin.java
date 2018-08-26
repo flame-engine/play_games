@@ -11,6 +11,7 @@ import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
 import io.flutter.plugin.common.PluginRegistry.ActivityResultListener;
 
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.graphics.Bitmap;
@@ -80,10 +81,40 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
       getIconImage();
     } else if (call.method.equals("showAchievements")) {
       showAchievements();
+    } else if (call.method.equals("unlockAchievementById")) {
+      String id = call.argument("id");
+      unlockAchievement(id);
+    } else if (call.method.equals("unlockAchievementByName")) {
+      String name = call.argument("name");
+      unlockAchievement(getIdByName(name));
+    } else if (call.method.equals("incrementAchievementById")) {
+      String id = call.argument("id");
+      int amount = call.argument("amount");
+      incrementAchievement(id, amount);
+    } else if (call.method.equals("incrementAchievementByName")) {
+      String name = call.argument("name");
+      int amount = call.argument("amount");
+      incrementAchievement(getIdByName(name), amount);
     } else {
       pendingOperation = null;
       result.notImplemented();
     }
+  }
+
+  private String getIdByName(String name) {
+    Context ctx = registrar.context();
+    int resId = ctx.getResources().getIdentifier(name, "string", ctx.getPackageName());
+    return ctx.getString(resId);
+  }
+
+  private void unlockAchievement(String id) {
+    Games.getAchievementsClient(registrar.activity(), currentAccount).unlock(id);
+    result(true);
+  }
+
+  private void incrementAchievement(String id, int amount) {
+    Games.getAchievementsClient(registrar.activity(), currentAccount).increment(id, amount);
+    result(true);
   }
 
   private void showAchievements() {
@@ -140,7 +171,7 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
     });
   }
 
-  private void result(Map<String, Object> response) {
+  private void result(Object response) {
     pendingOperation.result.success(response);
     pendingOperation = null;
   }

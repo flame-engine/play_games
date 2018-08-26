@@ -48,6 +48,20 @@ Future<Image> _fetchToMemory(Map<dynamic, dynamic> result) {
 }
 
 class PlayGames {
+
+  static void unlockAchievementById(String id) {
+    _channel.invokeMethod('unlockAchievementById', { 'id': id });
+  }
+  static void unlockAchievementByName(String name) {
+    _channel.invokeMethod('unlockAchievementByName', { 'name': name });
+  }
+  static void incrementAchievementById(String id, [int amount = 1]) {
+    _channel.invokeMethod('incrementAchievementById', { 'id': id, 'amount': amount });
+  }
+  static void incrementAchievementByName(String name, [int amount = 1]) {
+    _channel.invokeMethod('incrementAchievementByName', { 'name': name, 'amount': amount });
+  }
+
   static Future<bool> showAchievements() async {
     final Map<dynamic, dynamic> map = await _channel.invokeMethod('showAchievements');
     return map['closed'];
