@@ -37,7 +37,8 @@ import com.google.android.gms.tasks.OnSuccessListener;
 public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListener {
 
   private static final String TAG = PlayGamesPlugin.class.getCanonicalName();
-  private static final int RC_SIGN_IN = 1;
+  private static final int RC_SIGN_IN = 9001;
+  private static final int RC_ACHIEVEMENT_UI = 9002;
 
   private Registrar registrar;
   private PendingOperation pendingOperation;
@@ -77,10 +78,23 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
       getHiResImage();
     } else if (call.method.equals("getIconImage")) {
       getIconImage();
+    } else if (call.method.equals("showAchievements")) {
+      showAchievements();
     } else {
       pendingOperation = null;
       result.notImplemented();
     }
+  }
+
+  private void showAchievements() {
+    Games.getAchievementsClient(registrar.activity(), currentAccount)
+      .getAchievementsIntent()
+      .addOnSuccessListener(new OnSuccessListener<Intent>() {
+        @Override
+        public void onSuccess(Intent intent) {
+          registrar.activity().startActivityForResult(intent, RC_ACHIEVEMENT_UI);
+        }
+      });
   }
 
   private void explicitSignIn(GoogleSignInClient signInClient) {
@@ -185,19 +199,27 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
 
   @Override
   public boolean onActivityResult(int requestCode, int resultCode, Intent data) {
-    if (pendingOperation == null || requestCode != RC_SIGN_IN) {
+    if (pendingOperation == null) {
       return false;
     }
-    GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
-    if (result.isSuccess()) {
-      handleSuccess(result.getSignInAccount());
-    } else {
-      String message = result.getStatus().getStatusMessage();
-      if (message == null || message.isEmpty()) {
-          message = "Unexpected error " + result.getStatus();
+    if (requestCode == RC_ACHIEVEMENT_UI) {
+      Map<String, Object> result = new HashMap<>();
+      result.put("closed", true);
+      result(result);
+      return true;
+    } else if (requestCode == RC_SIGN_IN) {
+      GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+      if (result.isSuccess()) {
+        handleSuccess(result.getSignInAccount());
+      } else {
+        String message = result.getStatus().getStatusMessage();
+        if (message == null || message.isEmpty()) {
+            message = "Unexpected error " + result.getStatus();
+        }
+        error("ERROR_SIGNIN", message);
       }
-      error("ERROR_SIGNIN", message);
+      return true;
     }
-    return true;
+    return false;
   }
 }

@@ -34,7 +34,6 @@ class Account {
 
   Future<Image> get hiResImage async => await _fetchToMemory(await _channel.invokeMethod('getHiResImage'));
   Future<Image> get iconImage async => await _fetchToMemory(await _channel.invokeMethod('getIconImage'));
- 
 }
 
 Future<Image> _fetchToMemory(Map<dynamic, dynamic> result) {
@@ -49,6 +48,11 @@ Future<Image> _fetchToMemory(Map<dynamic, dynamic> result) {
 }
 
 class PlayGames {
+  static Future<bool> showAchievements() async {
+    final Map<dynamic, dynamic> map = await _channel.invokeMethod('showAchievements');
+    return map['closed'];
+  }
+
   static Future<SigninResult> signIn() async {
     final Map<dynamic, dynamic> map = await _channel.invokeMethod('signIn');
     SigninResultType type = _typeFromStr(map['type']);
