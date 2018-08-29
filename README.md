@@ -1,8 +1,6 @@
 # play_games
 
-Use Google Play Games Services on your Flutter app; signin, achievements, etc!
-
-**WIP**: This is currently a Work in Progress. Not all features are implemented, and things might change a lot.
+Use Google Play Games Services on your Flutter app; this allows for signin and achievements so far, but more additions are very welcome. If you like it, give us a star and feel free to help and contribute.
 
 ## Part 1: Sign In
 
@@ -19,11 +17,12 @@ Call the sign in method to sign in; you must check if the login was successufull
     this.loading = false;
 ```
 
-But don't think it will be that easy! Actually, GPGS signin is quite a hassle to do, but the following tutorial should help you walk through this process.
+But don't think it will be that easy! Actually, GPGS signin is quite a hassle to do, but [this](doc/signin.md) tutorial should help you out with this nefarious task.
 
-The basic steps (need to elaborate)
- * Create the GPGS Project
- * Create the linked android app with proper package name and SHA-1 inside GPGS
- * Create also a webapp and get the id from that (NOT your android linked app)
- * Create at least one achievement to get your games-ids.xml file and place it accordingly
- * Remember to add yourself as tester if not published
+Reasons for failure will be specified in the error property. Otherwhise, you can access the account property to get the account.
+
+## Part 2: Achievements
+
+You can both award achievements (unlock/increment) and show the Achievements screen in your game.
+
+TODO: tutorial
