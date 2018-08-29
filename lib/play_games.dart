@@ -15,7 +15,8 @@ enum SigninResultType {
 }
 
 SigninResultType _typeFromStr(String value) {
-  return SigninResultType.values.firstWhere((e) => e.toString().split('.')[1] == value);
+  return SigninResultType.values
+      .firstWhere((e) => e.toString().split('.')[1] == value);
 }
 
 class SigninResult {
@@ -33,8 +34,10 @@ class Account {
   String hiResImageUri;
   String iconImageUri;
 
-  Future<Image> get hiResImage async => await _fetchToMemory(await _channel.invokeMethod('getHiResImage'));
-  Future<Image> get iconImage async => await _fetchToMemory(await _channel.invokeMethod('getIconImage'));
+  Future<Image> get hiResImage async =>
+      await _fetchToMemory(await _channel.invokeMethod('getHiResImage'));
+  Future<Image> get iconImage async =>
+      await _fetchToMemory(await _channel.invokeMethod('getIconImage'));
 }
 
 Future<Image> _fetchToMemory(Map<dynamic, dynamic> result) {
@@ -49,27 +52,37 @@ Future<Image> _fetchToMemory(Map<dynamic, dynamic> result) {
 }
 
 class PlayGames {
-
   static Future<bool> unlockAchievementById(String id) async {
-    return await _channel.invokeMethod('unlockAchievementById', { 'id': id });
+    return await _channel.invokeMethod('unlockAchievementById', {'id': id});
   }
+
   static Future<bool> unlockAchievementByName(String name) async {
-    return await _channel.invokeMethod('unlockAchievementByName', { 'name': name });
+    return await _channel
+        .invokeMethod('unlockAchievementByName', {'name': name});
   }
-  static Future<bool> incrementAchievementById(String id, [int amount = 1]) async {
-    return await _channel.invokeMethod('incrementAchievementById', { 'id': id, 'amount': amount });
+
+  static Future<bool> incrementAchievementById(String id,
+      [int amount = 1]) async {
+    return await _channel
+        .invokeMethod('incrementAchievementById', {'id': id, 'amount': amount});
   }
-  static Future<bool> incrementAchievementByName(String name, [int amount = 1]) async {
-    return await _channel.invokeMethod('incrementAchievementByName', { 'name': name, 'amount': amount });
+
+  static Future<bool> incrementAchievementByName(String name,
+      [int amount = 1]) async {
+    return await _channel.invokeMethod(
+        'incrementAchievementByName', {'name': name, 'amount': amount});
   }
 
   // TODO better way to set gravity
-  static Future<bool> setPopupOptions({ bool show = true, int gravity = 49 }) async {
-    return await _channel.invokeMethod('setPopupOptions', { 'show': show, 'gravity': gravity });
+  static Future<bool> setPopupOptions(
+      {bool show = true, int gravity = 49}) async {
+    return await _channel
+        .invokeMethod('setPopupOptions', {'show': show, 'gravity': gravity});
   }
 
   static Future<bool> showAchievements() async {
-    final Map<dynamic, dynamic> map = await _channel.invokeMethod('showAchievements');
+    final Map<dynamic, dynamic> map =
+        await _channel.invokeMethod('showAchievements');
     return map['closed'];
   }
 
