@@ -14,7 +14,12 @@ Google has three major consoles: Play Console, Cloud Console and Firebase Consol
  Don't get those mixed up!
 
 ## Create a GPGS project
-...
+
+Let's assume you already have your Application registered in Google Play Console; that is what allows you to have a Store listing, and publish your app. If you don't, you should be able to easily create one without problems.
+
+That being set up, you need to create the Games Services project. That is a different thing! Access the [GPC](https://play.google.com/apps/publish), login if not already, and select *Game Services* on the left menu:
+
+![1](doc/images/p1.png)
 
 ## Steps
 
