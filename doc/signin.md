@@ -39,11 +39,58 @@ Fill both the name of the game and the category (you can copy from the Applicati
 
 You will be taken to your game page. A few things need to be done here. In order to publish (you can test without Publishing), you need to fill the Game Details page (basically just copying details that you already filled on your Application). You will find out that an orange check in the menu means it's ok for testing, and a green one means it's ok to publish. You can refrain from filling these for now, as long as you follow the Testing procedures in the end. Otherwise, I'd recommend you already fill this so you won't forget anything later on.
 
-## Link your project
+## Link your App
 
 This is the most unfriendly and cryptic part, so pay attention!
 
-...
+Firstly, you will need to get ahold of a couple things: your **package name** and **SHA-1 fingerprints**.
+
+### Package Name
+
+You porbably know your **package name** already, because you selected in the past. If you don't, the easiest place to find it is on your *AndroidManifest.xml* (android/app/src/main/AndroidManifest.xml), on the first line, on the <manifest> tag, package property.
+
+However, there is a catch. This package name must be match in several places, otherwise, you will get errors. Make sure these four places match the same package name:
+
+ * The folder structure (android/app/src/main/java/your/package/name);
+ * The actual java files (`package your.package.name`);
+ * Your AndroidManifest (android/app/src/main/AndroidManifest.xml), in the `manifest` tag, the `package` property; something like:
+
+```xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="your.package.name">
+```
+
+ * Your app module gradle.build file (android/app/build.gradle), in android > defaultConfig > applicationId), something like:
+
+```groovy
+android {
+    compileSdkVersion 27
+
+    lintOptions {
+        disable 'InvalidPackage'
+    }
+
+    defaultConfig {
+        applicationId "your.package.name"
+        ...
+    }
+}
+```
+
+Of course your actual Java packages might be subpackages of your **package name**, but they must start with the value on Android Manifest/applicationId. This base value is also the one you want to get ahold of for the purposes of this tutorial.
+
+As per Java convention, you should always select a package name that represent a domain that your own (but reversed); e.g., com.yorudomain.subdomain.anything.
+
+One very important thing to note here is:
+
+> Note: Both the **com.example** and **com.android** namespaces are **forbidden** by Google Play.
+
+From [here](https://developer.android.com/guide/topics/manifest/manifest-element#package), emphasis mine.
+
+These might be the default names from your setup, but they will not work with any Google services and give cryptic errors.
+
+### SHA-1 Fingerprint
+
+Every APK is signed with a keystore... (TODO)
 
 ## Steps
 
