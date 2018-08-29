@@ -19,7 +19,7 @@ Let's assume you already have your Application registered in Google Play Console
 
 That being set up, you need to create the Games Services project. That is a different thing! Access the [GPC](https://play.google.com/apps/publish), login if not already, and select *Game Services* on the left menu:
 
-![1](doc/images/p1.png)
+![1](images/p1.png)
 
 ## Steps
 
