@@ -209,7 +209,7 @@ In order to find out this SHA-1, go back to **All applications** and select your
 
 After selection your app, on the left menu, go to Release management > App signing, like so:
 
-![q1](images/q1.png)
+![q2](images/q2.png)
 
 Here, if you haven't disabled it (in which case this is not necessary), you can see under 'App signing certificate' the SHA-1 certificate. Just copy that and put it up together with the other(s).
 
