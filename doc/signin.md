@@ -215,9 +215,27 @@ Here, if you haven't disabled it (in which case this is not necessary), you can 
 
 ### Linking
 
-Fianlly you are ready to link the app. Grab your **package name** and up to 3 **SHA-1's** and go back to GPGS panel.
+Finally you are ready to link the app. Grab your **package name** and up to 3 **SHA-1's** and go back to GPGS panel. Select 'Linked apps' from the menu:
 
-...
+![r1](images/r1.png)
+
+Then, click on the 'Android' blue button. In the next screen you will need to fill your package name. If you already uploaded an app to your Application on the Applications sections, it will be suggested for you. The title will be already pre-filled with what you provided earlier in the Game details, but each linked app can have a different name if you'd like. You aslo have to anwswer a few questions about your game, basically it gives you the option to turn on some special features if you so desire. I'm not going to be using any of those, so I just click 'Save and continue'.
+
+On the next screen you will need to click 'Authorize your app now' big blue button, like so:
+
+![r2](images/r2.png)
+
+Click it and you may confirm your package name, and you will need to fill your SHA-1. **Add one of your SHA-1**, we will be able to add the other ones later. You might want to select the debug or debug/release one, if want to test it right away. But we will be able to add the other ones via the Firebase console (yeah, not here). Don't worry. Again, if you already uploaded a version of your app, it will pre-fill with the Play Store SHA-1. Beware, if you leave only that, you will only be able to test your app installing from the store (far from ideal). But we will add all te keys shortly.
+
+After that, you will see the following:
+
+![r3](images/r3.png)
+
+As stated, you won't need Client ID ever again. You might want to write it down just for safekeeping (for instance, you can use to make absolute sure you are adding the other SHA-1 later on to the right place, but it's not really necessary).
+
+The Application ID, however, will be used. But we will get to that later. Actually, both can be seen later in this screen.
+
+-- do I really need to link the web app?
 
 ## Steps
 
@@ -227,5 +245,4 @@ The basic steps (need to elaborate)
  * Create also a webapp and get the id from that (NOT your android linked app)
  * Create at least one achievement to get your games-ids.xml file and place it accordingly
  * Remember to add yourself as tester if not published
-
 
