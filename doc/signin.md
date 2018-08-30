@@ -86,11 +86,138 @@ One very important thing to note here is:
 
 From [here](https://developer.android.com/guide/topics/manifest/manifest-element#package), emphasis mine.
 
-These might be the default names from your setup, but they will not work with any Google services and give cryptic errors.
+These might be the default names from your setup, but they will not work with any Google services and give cryptic errors, so make sure to change that.
 
 ### SHA-1 Fingerprint
 
-Every APK is signed with a keystore... (TODO)
+Every APK is signed with a keystore. If you never set it up, it might use a generic keystore configured for your system, and that is far from ideal, because everyone in your team will need to use the same keystore for this project (otherwise signin won't work). So, you should use a unique keystore for each application. You can also use two per app, one for debug and the other for release (that's very common).
+
+If you already have your keystores setup, you can skip to Find out SHA-1 Fingerprint. Otherwise, use the following to generate a new one.
+
+#### Generate a new keystore
+
+To generate a new keystore, you must use the `keytool` command, that comes with Java. If you java bin folder is on your path, you already have this, otherwise you will need to look it up (in $JAVA_HOME/bin/keytool). Then, run:
+
+```bash
+    keytool -genkey -v -keystore my-release-key.keystore -alias alias_name -keyalg RSA -keysize 2048 -validity 10000
+```
+
+Put a password of your choosing. This is a not a personal password of yours, it's just to encrypt this file, that you might share with other people on the project. So just generate a random one and keep it in a secure place for safekeeping.
+
+Then you need to fill a lot of information. Normally I fill only my name (first name) and leave everything else UNKNOWN. Notice that in the end you must explicitly write [yes] to accept everything. Nothing of this is used anywhere.
+
+For the second password, just press enter to use the same as before (you could have two, but that'd be too much, I guess).
+
+After generating the key, you must setup your build.gradle file to use the key to sign your app. You will need to put the SHA1 you generated in the Play Console for configuration, and only an app signed with this key will work. Even in debug mode. Therefore, add the following for your app module build.gradle file (app/build.gradle):
+
+```groovy
+    signingConfigs {
+        debug {
+            storeFile file("/home/luan/projects/play-auth/secret/test.keystore")
+            storePassword 'password'
+            keyAlias 'alias'
+            keyPassword 'password'
+        }
+    }
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
+    }
+```
+
+Be sure to put the path to your key (better if it's a relative path, but never commit the key itself to a public repo), the passwords you selected, and the key alias (must be the same).
+
+This will add the key just for debugging; for release, add another build type named release (you probably already have one, so just add the signingConfig property. You can use the same key, but it's ideal to have two (so that you can share the debug with everyone in your team and keep the release one very well secured).
+
+One other (better, IMHO) option is to add a properties file, because the password and file should not be commited to your public repo. One convention I suggest is to create a `keys` folder inside `android` folder, put inside the the `key.jks` and a `key.properties` file, and add the whole folder to gitignore. You need to find another way to distribute it. The properties file has the following structure:
+
+```
+storePassword=password
+keyPassword=password
+keyAlias=alias
+storeFile=../keys/key.jks
+```
+
+Just replace your date and your key file name (but keep the relative path like that).
+
+Then, in your build.gradle file, for all your projects you can have the exact same setup; something like so:
+
+```groovy
+def keystorePropertiesFile = rootProject.file("keys/key.properties")
+def keystoreProperties = new Properties()
+keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+
+// ...
+
+android {
+
+    // ....
+
+    signingConfigs {
+        release {
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            storeFile file(keystoreProperties['storeFile'])
+            storePassword keystoreProperties['storePassword']
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.release
+        }
+
+        release {
+            signingConfig signingConfigs.release
+        }
+    }
+}
+```
+
+Once configured, the APP will be signed with your key. You must sign it with a known keystore both for debug and testing and for production, but you can use different keys. Either way, continue to the next step to get the SHA-1 from your key.
+
+#### Find out SHA-1 Fingerprint
+
+Finally, once you found out what is your key (or keys), you need to get their SHA-1 signature fingerprint, wich is going to be used in the following sections. Only apps signed with one of the keys you provided will be allowed to access GPGS features, even in test mode!
+
+In order to find out the fingerprint, you can use the `keytool` command again, like so:
+
+```bash
+    keytool -list -v -keystore test.keystore -alias test -storepass pass -keypass pass 2> /dev/null | grep "SHA1:" | rex '\s*SHA1: (.*)' '$1'
+```
+
+Here I'm using [rex](https://github.com/luanpotter/rex) to extract the infromation, but you can do that manually analyzing the response from keytool (it's very simple).
+
+You can also check the SHA-1 from your APK, in order to make sure your build process is correctly using the desired certificate to sign it, using the keytool command:
+
+```bash
+    keytool -list -printcert -jarfile app.apk
+```
+
+Another option is to extract the APK (it's just a ZIP file) and check the `/META-INF/ANDROID_.RSA` file.
+
+Either way, write down your SHA-1 fingerprint (or fingerprints, if you are using two keys).
+
+#### Play Store SHA-1
+
+There is a final catch. Apart from the fingerprint from your key(s), there is another one. Unless you disabled it, the Play Store, when you publih your app, will sign it again over your signature with its own key. That key's SHA-1 must also be added, otherwise players who download the app via store won't be able to signin. And you might not even notice this problem, because when you install the release apk you generated by hand it won't happen. So that's a final test you might make to make sure everything is working.
+
+In order to find out this SHA-1, go back to **All applications** and select your app (this is now the regular App page, not the GPGS!):
+
+![q1](images/q1.png)
+
+After selection your app, on the left menu, go to Release management > App signing, like so:
+
+![q1](images/q1.png)
+
+Here, if you haven't disabled it (in which case this is not necessary), you can see under 'App signing certificate' the SHA-1 certificate. Just copy that and put it up together with the other(s).
+
+### Linking
+
+Fianlly you are ready to link the app. Grab your **package name** and up to 3 **SHA-1's** and go back to GPGS panel.
+
+...
 
 ## Steps
 
