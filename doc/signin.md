@@ -9,8 +9,6 @@ Google has three major consoles: Play Console, Cloud Console and Firebase Consol
  * [Google Cloud Console](https://console.cloud.google.com) is the regular console for anything Google Cloud related (GAE, GCE, IAM, etc, etc).
  * [Firebase Console](https://console.firebase.google.com) is the console for Firebase related stuff, that are slowly being intertwined with GCP stuff.
 
- Firebase provides a very good generic authentication service, with lots of providers, including GPGS! But we will **not** be using that. We are going to sign in directly with GPGS, without Firebase. You might be using Firebase for other things, though (you most likely are).
-
  Don't get those mixed up!
 
 ## Create a GPGS project
@@ -235,7 +233,15 @@ As stated, you won't need Client ID ever again. You might want to write it down 
 
 The Application ID, however, will be used. But we will get to that later. Actually, both can be seen later in this screen.
 
--- do I really need to link the web app?
+Now, the shady part. In order for it to work, you also need to create a Web application. No, you are not going to use it. But you need to create it. So follow the procedure again, 'Link another app' and now select Web:
+
+![r4](images/r4.png)
+
+Just add a dummy url, because it's required, but won't matter. Again, 'Save and continue' and then 'Authorize'. This time, for a webapp, there are no SHA-1 fingerprints to add, so just hit Confirm.
+
+You will be shown...
+
+-- do I need to add to firebase auth? dont recall
 
 ## Steps
 
