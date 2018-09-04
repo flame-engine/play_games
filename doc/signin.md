@@ -313,12 +313,39 @@ Now let's go back to Google Play Console.
 
 ## Final Steps on Google Play Console
 
-. create an achievemetn
-. download games-ids.xml file and place it
-. add yourself as tester!!
+Back to the Google Play Console, the next step is to actually create an achievement. This is crucial because there is one more file you need to download, the `games-ids.xml` file, and it only gets shown after you add an Achievement.
+
+Don't worry, if you don't publish your achievement, you can easily delete it later.
+
+Select Achievements on the left menu and then click the big blue button 'Add achivement'.
+
+![t3](images/t3.png)
+
+You just need to fill in the name for the purposes of this tutorial. Hit 'Save' and all done!
+
+Now a 'Get resources' link will appear:
+
+![t4](images/t4.png)
+
+On the popup, select the XML under Android tab. Create a file with that content called `games-ids.xml` file, in the following path:
+
+```
+  android/app/src/main/res/values/games-ids.xml
+```
+
+This and `google-services.json` are the two files you need to add, but there are more stuff you need to change in your project.
+
+For now, however, let's finish off with Google Play Console.
+
+If you want to deploy your app to the store, you need to deploy the Game Services as well. In order to do that, nothing can be orange (all greens) on the left menu. This means you either have to fill all details for the achievements or delete the one you added (you just used it to get the `games-ids.xml` file).
+
+Otherwise, if you just want to test, you can, but you need to add yourself as a Tester. The e-mail from your google account for the Google Cloud Console, that's already added. It's good practice to check, thouhg, under left menu > Testing. Make sure your Android device's email is added to this section.
 
 ## Configure your project
 
+Finally we are done configuration related to the web consoles. Yay! Now just a few more steps regards configuring your project source code.
+
 . add pub dep to pubspec
 . add deps and stuff to gradle
+. other stuff like AndroidManifest
 . copy crystap!
