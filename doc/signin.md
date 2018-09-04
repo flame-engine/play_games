@@ -275,14 +275,50 @@ From there select the General tab (should be already) and under Your apps, add a
 
 Fill again your package name, add your App nickname (basically your app's name) and, again, your debug key (or one of the keys you have). It can be the same one, soon we will add the other(s).
 
-...
+![s5](images/s5.png)
 
-## Steps
+Then, click 'Register app', and continue to the next step.
 
-The basic steps (need to elaborate)
- * Create the GPGS Project
- * Create the linked android app with proper package name and SHA-1 inside GPGS
- * Create also a webapp and get the id from that (NOT your android linked app)
- * Create at least one achievement to get your games-ids.xml file and place it accordingly
- * Remember to add yourself as tester if not published
+Here you can download the 'google-services.json' file, but you don't need to do it know, as we will download the updated one later. Either way, you can do so if you desire, click 'Download google-services.json'.
 
+This section tells you exactly where to put it: `android/app/google-services.json`. But we will get to that very soon.
+
+Then, click 'Next', and you will see instructions on adding the Firebase SDK. You can skip this now, as it will be covered in the next section.
+
+So, click 'Next' again. Finally, you can 'Skip this step' the last step. We are not ready to test yet.
+
+Now you can finally add the other SHA! Taken again to General Settings tab, you can see the Fingerprint you just added in the screen bellow, and a button to add new Fingerprints!
+
+![s6](images/s6.png)
+
+Click 'Add Fingerprint' and add the other(s) fingerprint you have. Don't forget to add the Play Store fingerprint, or the app deployed on the Store won't work!
+
+After that, download the updated 'google-services.json' file via the download button. You must put this file in the `android/app` folder.
+
+### Authentication
+
+The second thing to do is to enable Game Play Services login via Firebase. Go to the left menu > Develop > Authentication:
+
+![t1](images/t1.png)
+
+Select 'Sign-in method' tab to click 'Play Games' to enable it:
+
+![t2](images/t2.png)
+
+But in order to enable, you need to fill the Web Client Id and Client Secret you took note before. But the Web client, not the Android one!
+
+Hit 'Save' and you are all set for Firebase!
+
+Now let's go back to Google Play Console.
+
+## Final Steps on Google Play Console
+
+. create an achievemetn
+. download games-ids.xml file and place it
+. add yourself as tester!!
+
+## Configure your project
+
+. add pub dep to pubspec
+. add deps and stuff to gradle
+. copy crystap!
