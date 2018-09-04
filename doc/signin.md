@@ -239,9 +239,43 @@ Now, the shady part. In order for it to work, you also need to create a Web appl
 
 Just add a dummy url, because it's required, but won't matter. Again, 'Save and continue' and then 'Authorize'. This time, for a webapp, there are no SHA-1 fingerprints to add, so just hit Confirm.
 
-You will be shown...
+You will be shown, again, the same client id and a new 'OAuth2 Client ID'. Note these two, they will be required. Also, there is matching pasword for your oauth client id, but to see it, you must follow the link to the Google Cloud Console. Do so and note your password. You might need to accept some more terms to access the new console (if this is your first time).
 
--- do I need to add to firebase auth? dont recall
+On Google Cloud Console > APIs > Credentials, where you will be taken, you can see a list of Oauth clients. You need to select the one matching the one you created by client id (you noted the client id from the web client before):
+
+![r5](images/r5.png)
+
+Find the match and click on the pencil to edit, where you will be able to see the client secret. Take a note of that!
+
+Now your apps are linked, but will need to finish off on the last console you haven't use yet: Firebase.
+
+## Firebase Console
+
+Finally, there is Firebase configuration. On the Game Details section, there is a huge button to allow for Firebase Analytics. That is absolutely not necessary and you don't need to do it, unless you want to enable analytics via firebase (it's pretty cool).
+
+But otherwise, just go to the [Firebase Console](https://console.firebase.google.com). If you already created a project linked with this Game before, it will appear here and you shall select it. Otherwise, you need to create a new Firebase project linked with your Games Services. Click the big blue 'Add project' button:
+
+![s1](images/s1.png)
+
+On the following dialog, you need to select on Project name your Google Cloud existing project (it exists because it was created automatically when you created your Games Services). So select that, make sure you click the option in the dropdown and don't just create a new one! Again accept the terms and click on 'Add firebase':
+
+![s2](images/s2.png)
+
+Wait for completion you will be taken to your brand new Firebase console! Here you need to do two things:
+
+### Add your other SHA-1 keys
+
+To do this, you need to access the little gear near Project Overview on the left menu (Settings, I guess), and then Project Settings, like so:
+
+![s3](images/s3.png)
+
+From there select the General tab (should be already) and under Your apps, add a new Android app.
+
+![s4](images/s4.png)
+
+Fill again your package name, add your App nickname (basically your app's name) and, again, your debug key (or one of the keys you have). It can be the same one, soon we will add the other(s).
+
+...
 
 ## Steps
 
