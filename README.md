@@ -25,4 +25,18 @@ Reasons for failure will be specified in the error property. Otherwhise, you can
 
 You can both award achievements (unlock/increment) and show the Achievements screen in your game.
 
-TODO: tutorial
+In order to unlock or increment an achievement, use the provided APIs:
+
+```dart
+  PlayGames.unlockAchievementByName(name);
+```
+
+This is async and you wait for the return if desired. The name is the name in your `games-ids.xml` file, you can also call the by id method.
+
+Also, there is a method to display a popup with your achievements:
+
+```dart
+    PlayGames.showAchievements();
+```
+
+Again, this is async and returns only when the player closes the popup. So maybe you want to pause your game until that happens.
