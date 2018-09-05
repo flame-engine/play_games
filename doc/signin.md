@@ -345,7 +345,80 @@ Otherwise, if you just want to test, you can, but you need to add yourself as a 
 
 Finally we are done configuration related to the web consoles. Yay! Now just a few more steps regards configuring your project source code.
 
-. add pub dep to pubspec
-. add deps and stuff to gradle
-. other stuff like AndroidManifest
-. copy crystap!
+For these steps, you can see our example game [Crystap](https://github.com/luanpotter/crystap) if you have any questions.
+
+Firstly, add `play_games` to your `pubspec.yaml` file:
+
+```yaml
+dependencies:
+  flutter:
+    sdk: flutter
+  play_games: 0.1.0
+```
+
+And run `flutter pub get` to update. That's not enough, though! This plugin depends on Google's dependencies only as API, meaning the implementation must be provided by the application. That is done so that you can add the version you desired, as long as they are API compatible. So you need to add a couple dependencies on both your `build.gradle` files (the root and module).
+
+On the root build file (`android/build.gralde`), you need to add `google-services` to buildscript > dependencies, in the beginning, like so:
+
+```groovy
+buildscript {
+    repositories {
+        google()
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.1.4'
+        classpath 'com.google.gms:google-services:4.0.2' // add this line!
+    }
+}
+
+// ...
+```
+
+For the module file (`android/app/build.gradle`), there are more changes necessary; you must add four dependencies and also a plugin application, in the end of your file, like so:
+
+```groovy
+// ...
+
+dependencies {
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+
+    // add these four
+    implementation 'com.google.firebase:firebase-core:16.0.3'
+    implementation 'com.google.firebase:firebase-auth:16.0.3'
+    implementation 'com.google.android.gms:play-services-auth:16.0.0'
+    implementation 'com.google.android.gms:play-services-games:15.0.1'
+}
+
+// add this
+apply plugin: 'com.google.gms.google-services'
+```
+
+Now you need to add two lines to your Android Manifest file (`android/app/src/main/AndroidManifest.xml`), inside manifest > application:
+
+```xml
+    <meta-data android:name="com.google.android.gms.games.APP_ID" android:value="@string/app_id" />
+    <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version"/>
+```
+
+`google_play_services_version` comes from the dependency you added. Now the most important, `app_id`, comes from that `games-id.xml` file you setup previously, so make sure that's that.
+
+And... Congratulations!!! You are ready to test! After all this effort! Just drop this to your dart file:
+
+```dart
+  void singIn() async {
+    SigninResult result = await PlayGames.signIn();
+    if (result.success) {
+      await PlayGames.setPopupOptions();
+      profile = Profile(result.account);
+    } else {
+      error = result.message;
+    }
+    loading = false;
+  }
+```
+
+And invoke when desired.
