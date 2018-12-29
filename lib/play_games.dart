@@ -40,6 +40,16 @@ class Account {
       await _fetchToMemory(await _channel.invokeMethod('getIconImage'));
 }
 
+class Snapshot {
+  String content;
+  Map<String, String> metadata;
+
+  Snapshot.fromMap(Map data) {
+    this.content = data['content'];
+    this.metadata = (data['metadata'] as Map<dynamic, dynamic>).cast<String, String>();
+  }
+}
+
 Future<Image> _fetchToMemory(Map<dynamic, dynamic> result) {
   Uint8List bytes = result['bytes'];
   if (bytes == null) {
@@ -86,8 +96,18 @@ class PlayGames {
     return map['closed'];
   }
 
-  static Future<SigninResult> signIn() async {
-    final Map<dynamic, dynamic> map = await _channel.invokeMethod('signIn');
+  static Future<Snapshot> openSnapshot(String name) async {
+    final Map<dynamic, dynamic> map = await _channel.invokeMethod('openSnapshot', { 'snapshotName': name });
+    return Snapshot.fromMap(map);
+  }
+
+  static Future<bool> saveSnapshot(String name, String content, { Map<String, String> metadata = const {} }) async {
+    final Map<dynamic, dynamic> result = await _channel.invokeMethod('saveSnapshot', { 'snapshotName': name, 'content': content, 'metadata': metadata });
+    return result['status'] as bool;
+  }
+
+  static Future<SigninResult> signIn({ bool requestEmail = true, bool scopeSnapshot = false }) async {
+    final Map<dynamic, dynamic> map = await _channel.invokeMethod('signIn', { 'requestEmail': requestEmail, 'scopeSnapshot' : scopeSnapshot });
     SigninResultType type = _typeFromStr(map['type']);
     SigninResult result = new SigninResult()..type = type;
     if (type == SigninResultType.SUCCESS) {

@@ -13,3 +13,7 @@ build/
 .classpath
 .project
 .settings/
+
+android/gradle/
+android/gradlew
+android/gradlew.bat
