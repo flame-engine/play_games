@@ -46,7 +46,7 @@ class Snapshot {
 
   Snapshot.fromMap(Map data) {
     this.content = data['content'];
-    this.metadata = (data['metadata'] as Map<dynamic, dynamic>).cast<String, String>();
+    this.metadata = (data['metadata'] as Map<dynamic, dynamic> ?? {}).cast<String, String>();
   }
 }
 
