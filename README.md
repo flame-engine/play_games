@@ -80,3 +80,5 @@ Here follows an example of the usage of the APIs from the [crystap](https://gith
 ```
 
 Here our data is just a single integer, that we convert to a String in order to save it within the content. Again, your save can be an arbitrarily complex JSON or anything like that. See the full Crystap game for more in-depth details on how to use the API.
+
+There are also APIs for conflict resolution. If you want more robuts integration, check those out in the source code.

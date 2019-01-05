@@ -9,3 +9,7 @@
 ## 0.2.0
 
 * Adding Saved Games
+
+## 0.3.0
+
+* Adding conflict resolution to Saved Games
