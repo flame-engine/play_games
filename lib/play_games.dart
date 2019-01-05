@@ -6,6 +6,20 @@ import 'package:flutter/services.dart';
 
 const MethodChannel _channel = const MethodChannel('play_games');
 
+class CloudSaveError implements Exception {
+  String type;
+  String message;
+  CloudSaveError(this.type, this.message);
+  @override
+  String toString() => 'Error $type, message: $message';
+}
+
+class CloudSaveConflictError extends CloudSaveError {
+  String conflictId;
+  Snapshot local, server;
+  CloudSaveConflictError(String type, String message, this.conflictId, this.local, this.server) : super(type, message);
+}
+
 enum SigninResultType {
   SUCCESS,
   ERROR_SIGNIN,
@@ -98,12 +112,32 @@ class PlayGames {
 
   static Future<Snapshot> openSnapshot(String name) async {
     final Map<dynamic, dynamic> map = await _channel.invokeMethod('openSnapshot', { 'snapshotName': name });
+    if (map['type'] != null && !map['type'].isEmpty) {
+      if (map['type'] == 'SNAPSHOT_CONFLICT') {
+        throw new CloudSaveConflictError(map['type'], map['message'], map['conflictId'], Snapshot.fromMap(map['local']), Snapshot.fromMap(map['server']));
+      }
+      throw new CloudSaveError(map['type'], map['message']);
+    }
     return Snapshot.fromMap(map);
   }
 
   static Future<bool> saveSnapshot(String name, String content, { Map<String, String> metadata = const {} }) async {
     final Map<dynamic, dynamic> result = await _channel.invokeMethod('saveSnapshot', { 'snapshotName': name, 'content': content, 'metadata': metadata });
+    if (result['type'] != null && !result['type'].isEmpty) {
+      throw new CloudSaveError(result['type'], result['message']);
+    }
     return result['status'] as bool;
+  }
+
+  static Future<Snapshot> resolveSnapshotConflict(String name, String conflictId, String content, { Map<String, String> metadata = const {} }) async {
+    final Map<dynamic, dynamic> map = await _channel.invokeMethod('resolveSnapshotConflict', { 'snapshotName': name, 'conflictId': conflictId, 'content': content, 'metadata': metadata });
+    if (map['type'] != null && !map['type'].isEmpty) {
+      if (map['type'] == 'SNAPSHOT_CONFLICT') {
+        throw new CloudSaveConflictError(map['type'], map['message'], map['conflictId'], Snapshot.fromMap(map['local']), Snapshot.fromMap(map['server']));
+      }
+      throw new CloudSaveError(map['type'], map['message']);
+    }
+    return Snapshot.fromMap(map);
   }
 
   static Future<SigninResult> signIn({ bool requestEmail = true, bool scopeSnapshot = false }) async {

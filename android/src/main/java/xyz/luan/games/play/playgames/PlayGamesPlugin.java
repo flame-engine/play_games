@@ -118,6 +118,16 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
             String content = call.argument("content");
             Map<String, String> metadata = call.argument("metadata");
             saveSnapshot(snapshotName, content, metadata);
+        } else if (call.method.equals("resolveSnapshotConflict")) {
+            if (pendingOperation != null) {
+                throw new IllegalStateException("signIn/showAchievements cannot be used concurrently!");
+            }
+            pendingOperation = new PendingOperation(call, result);
+            String snapshotName = call.argument("snapshotName");
+            String conflictId = call.argument("conflictId");
+            String content = call.argument("content");
+            Map<String, String> metadata = call.argument("metadata");
+            resolveSnapshotConflict(snapshotName, conflictId, content, metadata);
         } else {
             new Request(currentAccount, registrar, call, result).handle();
         }
@@ -224,13 +234,25 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
         });
     }
 
-    public void openSnapshot(final String snapshotName) {
-        SnapshotsClient snapshotsClient = Games.getSnapshotsClient(this.registrar.activity(), currentAccount);
-        snapshotsClient.open(snapshotName, true).addOnSuccessListener(new OnSuccessListener<SnapshotsClient.DataOrConflict<Snapshot>>() {
+    private OnSuccessListener<SnapshotsClient.DataOrConflict<Snapshot>> generateCallback(final String snapshotName) {
+        return new OnSuccessListener<SnapshotsClient.DataOrConflict<Snapshot>>() {
             @Override
             public void onSuccess(SnapshotsClient.DataOrConflict<Snapshot> i) {
                 if (i.isConflict()) {
-                    error("SNAPSHOT_CONFLICT", i.getConflict().getConflictId());
+                    try {
+                        String conflictId = i.getConflict().getConflictId();
+                        Map<String, Object> errorMap = new HashMap<>();
+                        errorMap.put("type", "SNAPSHOT_CONFLICT");
+                        errorMap.put("message", "There was a conflict while opening snapshot, call resolveConflict to solve it.");
+                        errorMap.put("conflictId", conflictId);
+                        Snapshot snapshot = i.getConflict().getSnapshot();
+                        loadedSnapshots.put(snapshotName, snapshot);
+                        errorMap.put("local", toMap(i.getConflict().getConflictingSnapshot()));
+                        errorMap.put("server", toMap(snapshot));
+                        result(errorMap);
+                    } catch (IOException e) {
+                        error("SNAPSHOT_CONTENT_READ_ERROR", e);
+                    }
                 } else {
                     loadedSnapshots.put(snapshotName, i.getData());
                     try {
@@ -240,8 +262,12 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
                     }
                 }
             }
-        }).addOnFailureListener(new OnFailureListener() {
+        };
+    }
 
+    public void openSnapshot(String snapshotName) {
+        SnapshotsClient snapshotsClient = Games.getSnapshotsClient(this.registrar.activity(), currentAccount);
+        snapshotsClient.open(snapshotName, true).addOnSuccessListener(generateCallback(snapshotName)).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
                 System.out.println("----- failure " + e);
@@ -286,6 +312,29 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
             @Override
             public void onFailure(@NonNull Exception e) {
                 error("SAVE_SNAPSHOT_ERROR", e);
+            }
+        });
+    }
+
+    public void resolveSnapshotConflict(String snapshotName, String conflictId, String content, Map<String, String> metadata) {
+        if (!hasOnlyAllowedKeys(metadata, "description")) {
+            return;
+        }
+        SnapshotsClient snapshotsClient = Games.getSnapshotsClient(this.registrar.activity(), currentAccount);
+        Snapshot snapshot = loadedSnapshots.get(snapshotName);
+        if (snapshot == null) {
+            error("SNAPSHOT_NOT_OPENED", "The snapshot with name " + snapshotName + " was not opened before.");
+            return;
+        }
+        snapshot.getSnapshotContents().writeBytes(content.getBytes());
+        SnapshotMetadataChange metadataChange = new SnapshotMetadataChange.Builder()
+                .setDescription(metadata.get("description"))
+                .build();
+
+        snapshotsClient.resolveConflict(conflictId, snapshot.getMetadata().getSnapshotId(), metadataChange, snapshot.getSnapshotContents()).addOnSuccessListener(generateCallback(snapshotName)).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                error("RESOLVE_SNAPSHOT_CONFLICT_ERROR", e);
             }
         });
     }
