@@ -13,3 +13,7 @@
 ## 0.3.0
 
 * Adding conflict resolution to Saved Games
+
+## 0.3.1
+
+* Fix concurrency bug when an unexpected exception was thrown
