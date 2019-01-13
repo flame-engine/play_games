@@ -77,15 +77,71 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
         return value.toString().equalsIgnoreCase("true");
     }
 
+    private void startTransaction(MethodCall call, Result result) {
+        if (pendingOperation != null) {
+            throw new IllegalStateException("signIn/showAchievements/saved games/snapshots cannot be used concurrently!");
+        }
+        pendingOperation = new PendingOperation(call, result);
+    }
+
     @Override
     public void onMethodCall(MethodCall call, Result result) {
         if (call.method.equals("signIn")) {
-            if (pendingOperation != null) {
-                throw new IllegalStateException("signIn/showAchievements cannot be used concurrently!");
-            }
-            pendingOperation = new PendingOperation(call, result);
+            startTransaction(call, result);
             boolean requestEmail = getPropOrDefault(call, "requestEmail", true);
             boolean scopeSnapshot = getPropOrDefault(call, "scopeSnapshot", false);
+            try {
+                signIn(requestEmail, scopeSnapshot);
+            } catch (Exception ex) {
+                pendingOperation = null;
+                throw ex;
+            }
+        } else if (call.method.equals("showAchievements")) {
+            startTransaction(call, result);
+            try {
+                showAchievements();
+            } catch (Exception ex) {
+                pendingOperation = null;
+                throw ex;
+            }
+        } else if (call.method.equals("openSnapshot")) {
+            startTransaction(call, result);
+            String snapshotName = call.argument("snapshotName");
+            try {
+                openSnapshot(snapshotName);
+            } catch (Exception ex) {
+                pendingOperation = null;
+                throw ex;
+            }
+        } else if (call.method.equals("saveSnapshot")) {
+            startTransaction(call, result);
+            String snapshotName = call.argument("snapshotName");
+            String content = call.argument("content");
+            Map<String, String> metadata = call.argument("metadata");
+            try {
+                saveSnapshot(snapshotName, content, metadata);
+            } catch (Exception ex) {
+                pendingOperation = null;
+                throw ex;
+            }
+        } else if (call.method.equals("resolveSnapshotConflict")) {
+            startTransaction(call, result);
+            String snapshotName = call.argument("snapshotName");
+            String conflictId = call.argument("conflictId");
+            String content = call.argument("content");
+            Map<String, String> metadata = call.argument("metadata");
+            try {
+                resolveSnapshotConflict(snapshotName, conflictId, content, metadata);
+            } catch (Exception ex) {
+                pendingOperation = null;
+                throw ex;
+            }
+        } else {
+            new Request(currentAccount, registrar, call, result).handle();
+        }
+    }
+
+    private void signIn(boolean requestEmail, boolean scopeSnapshot) {
             GoogleSignInOptions.Builder builder = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_GAMES_SIGN_IN);
             if (requestEmail) {
                 builder.requestEmail();
@@ -96,41 +152,6 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
             GoogleSignInOptions opts = builder.build();
             GoogleSignInClient signInClient = GoogleSignIn.getClient(registrar.activity(), opts);
             silentSignIn(signInClient);
-        } else if (call.method.equals("showAchievements")) {
-            if (pendingOperation != null) {
-                throw new IllegalStateException("signIn/showAchievements cannot be used concurrently!");
-            }
-            pendingOperation = new PendingOperation(call, result);
-            showAchievements();
-        } else if (call.method.equals("openSnapshot")) {
-            if (pendingOperation != null) {
-                throw new IllegalStateException("signIn/showAchievements cannot be used concurrently!");
-            }
-            pendingOperation = new PendingOperation(call, result);
-            String snapshotName = call.argument("snapshotName");
-            openSnapshot(snapshotName);
-        } else if (call.method.equals("saveSnapshot")) {
-            if (pendingOperation != null) {
-                throw new IllegalStateException("signIn/showAchievements cannot be used concurrently!");
-            }
-            pendingOperation = new PendingOperation(call, result);
-            String snapshotName = call.argument("snapshotName");
-            String content = call.argument("content");
-            Map<String, String> metadata = call.argument("metadata");
-            saveSnapshot(snapshotName, content, metadata);
-        } else if (call.method.equals("resolveSnapshotConflict")) {
-            if (pendingOperation != null) {
-                throw new IllegalStateException("signIn/showAchievements cannot be used concurrently!");
-            }
-            pendingOperation = new PendingOperation(call, result);
-            String snapshotName = call.argument("snapshotName");
-            String conflictId = call.argument("conflictId");
-            String content = call.argument("content");
-            Map<String, String> metadata = call.argument("metadata");
-            resolveSnapshotConflict(snapshotName, conflictId, content, metadata);
-        } else {
-            new Request(currentAccount, registrar, call, result).handle();
-        }
     }
 
     private void explicitSignIn(GoogleSignInClient signInClient) {
