@@ -28,6 +28,48 @@ enum SigninResultType {
   ERROR_IOS
 }
 
+enum TimeSpan {
+  TIME_SPAN_DAILY,
+  TIME_SPAN_WEEKLY,
+  TIME_SPAN_ALL_TIME
+}
+
+enum CollectionType {
+  COLLECTION_PUBLIC,
+  COLLECTION_SOCIAL
+}
+
+class SubmitScoreSingleResult {
+  int rawScore;
+  String formattedScore;
+  bool newBest;
+  String scoreTag;
+}
+
+class SubmitScoreResults {
+  String type;
+  String leaderboardId;
+  String playerId;
+  SubmitScoreSingleResult scoreResultDaily;
+  SubmitScoreSingleResult scoreResultWeekly;
+  SubmitScoreSingleResult scoreResultAllTime;
+}
+
+class ScoreResult {
+  String displayRank;
+  String displayScore;
+  int rank;
+  int rawScore;
+  String scoreTag;
+  int timestampMillis;
+  String scoreHolderDisplayName;
+}
+
+class ScoreResults {
+  String leaderboardDisplayName;
+  List<ScoreResult> scores;
+}
+
 SigninResultType _typeFromStr(String value) {
   return SigninResultType.values
       .firstWhere((e) => e.toString().split('.')[1] == value);
@@ -138,6 +180,60 @@ class PlayGames {
       throw new CloudSaveError(map['type'], map['message']);
     }
     return Snapshot.fromMap(map);
+  }
+
+  static Future<SubmitScoreResults> submitScoreByName(String leaderboardName, int score) async {
+    final Map<dynamic, dynamic> map = await _channel.invokeMethod('submitScoreByName', { 'leaderboardName': leaderboardName, 'score': score });
+    return _parseSubmitScore(map);
+  }
+
+  static Future<SubmitScoreResults> submitScoreById(String leaderboardId, int score) async {
+    final Map<dynamic, dynamic> map = await _channel.invokeMethod('submitScoreById', { 'leaderboardId': leaderboardId, 'score': score });
+    return _parseSubmitScore(map);
+  }
+
+  static SubmitScoreResults _parseSubmitScore(Map<dynamic, dynamic> map) {
+    return SubmitScoreResults()
+      ..type = map['type']
+      ..leaderboardId = map['leaderboardId']
+      ..playerId = map['playerId']
+      ..scoreResultDaily = _parseSubmitSingleScore(map['scoreResultDaily'])
+      ..scoreResultWeekly = _parseSubmitSingleScore(map['scoreResultWeekly'])
+      ..scoreResultAllTime = _parseSubmitSingleScore(map['scoreResultAllTime']);
+  }
+
+  static SubmitScoreSingleResult _parseSubmitSingleScore(Map<dynamic, dynamic> map) {
+    return SubmitScoreSingleResult()
+      ..rawScore = map['rawScore']
+      ..formattedScore = map['formattedScore']
+      ..newBest = map['newBest']
+      ..scoreTag = map['scoreTag'];
+  }
+
+  static Future<ScoreResults> loadPlayerCenteredScoresByName(String leaderboardName, TimeSpan timeSpan, CollectionType collectionType, int maxResults, { bool forceReload = false }) async {
+    final Map<dynamic, dynamic> map = await _channel.invokeMethod('loadPlayerCenteredScoresByName', { 'leaderboardName': leaderboardName, 'timeSpan': timeSpan.toString(), 'collectionType': collectionType.toString(), 'maxResults': maxResults, 'forceReload': forceReload });
+    return _parseScoreResults(map);
+  }
+
+  static Future<ScoreResults> loadPlayerCenteredScoresById(String leaderboardId, TimeSpan timeSpan, CollectionType collectionType, int maxResults, { bool forceReload = false }) async {
+    final Map<dynamic, dynamic> map = await _channel.invokeMethod('loadPlayerCenteredScoresById', { 'leaderboardId': leaderboardId, 'timeSpan': timeSpan.toString(), 'collectionType': collectionType.toString(), 'maxResults': maxResults, 'forceReload': forceReload });
+    return _parseScoreResults(map);
+  }
+
+  static ScoreResults _parseScoreResults(Map<dynamic, dynamic> map) {
+    return ScoreResults()
+      ..leaderboardDisplayName = map['leaderboardDisplayName']
+      ..scores = (map['scores'] as List).map((el) => _parseScoreResult(el as Map<dynamic, dynamic>)).toList();
+  }
+
+  static ScoreResult _parseScoreResult(Map<dynamic, dynamic> map) {
+    return ScoreResult()
+        ..displayRank = map['displayRank']
+        ..displayScore = map['displayScore']
+        ..rank = map['rank']
+        ..rawScore = map['rawScore']
+        ..timestampMillis = map['timestampMillis']
+        ..scoreHolderDisplayName = map['scoreHolderDisplayName'];
   }
 
   static Future<SigninResult> signIn({ bool requestEmail = true, bool scopeSnapshot = false }) async {

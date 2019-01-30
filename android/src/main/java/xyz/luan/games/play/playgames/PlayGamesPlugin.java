@@ -15,14 +15,11 @@ import com.google.android.gms.drive.Drive;
 import com.google.android.gms.games.Games;
 import com.google.android.gms.games.Player;
 import com.google.android.gms.games.PlayersClient;
-import com.google.android.gms.games.SnapshotsClient;
-import com.google.android.gms.games.snapshot.Snapshot;
-import com.google.android.gms.games.snapshot.SnapshotMetadata;
-import com.google.android.gms.games.snapshot.SnapshotMetadataChange;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.SuccessContinuation;
 import com.google.android.gms.tasks.Task;
+import com.google.android.gms.games.snapshot.Snapshot;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -104,40 +101,8 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
                 pendingOperation = null;
                 throw ex;
             }
-        } else if (call.method.equals("openSnapshot")) {
-            startTransaction(call, result);
-            String snapshotName = call.argument("snapshotName");
-            try {
-                openSnapshot(snapshotName);
-            } catch (Exception ex) {
-                pendingOperation = null;
-                throw ex;
-            }
-        } else if (call.method.equals("saveSnapshot")) {
-            startTransaction(call, result);
-            String snapshotName = call.argument("snapshotName");
-            String content = call.argument("content");
-            Map<String, String> metadata = call.argument("metadata");
-            try {
-                saveSnapshot(snapshotName, content, metadata);
-            } catch (Exception ex) {
-                pendingOperation = null;
-                throw ex;
-            }
-        } else if (call.method.equals("resolveSnapshotConflict")) {
-            startTransaction(call, result);
-            String snapshotName = call.argument("snapshotName");
-            String conflictId = call.argument("conflictId");
-            String content = call.argument("content");
-            Map<String, String> metadata = call.argument("metadata");
-            try {
-                resolveSnapshotConflict(snapshotName, conflictId, content, metadata);
-            } catch (Exception ex) {
-                pendingOperation = null;
-                throw ex;
-            }
         } else {
-            new Request(currentAccount, registrar, call, result).handle();
+            new Request(this, currentAccount, registrar, call, result).handle();
         }
     }
 
@@ -255,127 +220,7 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
         });
     }
 
-    private OnSuccessListener<SnapshotsClient.DataOrConflict<Snapshot>> generateCallback(final String snapshotName) {
-        return new OnSuccessListener<SnapshotsClient.DataOrConflict<Snapshot>>() {
-            @Override
-            public void onSuccess(SnapshotsClient.DataOrConflict<Snapshot> i) {
-                if (i.isConflict()) {
-                    try {
-                        String conflictId = i.getConflict().getConflictId();
-                        Map<String, Object> errorMap = new HashMap<>();
-                        errorMap.put("type", "SNAPSHOT_CONFLICT");
-                        errorMap.put("message", "There was a conflict while opening snapshot, call resolveConflict to solve it.");
-                        errorMap.put("conflictId", conflictId);
-                        Snapshot snapshot = i.getConflict().getSnapshot();
-                        loadedSnapshots.put(snapshotName, snapshot);
-                        errorMap.put("local", toMap(i.getConflict().getConflictingSnapshot()));
-                        errorMap.put("server", toMap(snapshot));
-                        result(errorMap);
-                    } catch (IOException e) {
-                        error("SNAPSHOT_CONTENT_READ_ERROR", e);
-                    }
-                } else {
-                    loadedSnapshots.put(snapshotName, i.getData());
-                    try {
-                        result(toMap(i.getData()));
-                    } catch (IOException e) {
-                        error("SNAPSHOT_CONTENT_READ_ERROR", e);
-                    }
-                }
-            }
-        };
-    }
-
-    public void openSnapshot(String snapshotName) {
-        SnapshotsClient snapshotsClient = Games.getSnapshotsClient(this.registrar.activity(), currentAccount);
-        snapshotsClient.open(snapshotName, true).addOnSuccessListener(generateCallback(snapshotName)).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                System.out.println("----- failure " + e);
-                error("SNAPSHOT_FAILURE", e);
-            }
-        });
-    }
-
-    private boolean hasOnlyAllowedKeys(Map<String, ?> map, String... keys) {
-        Set<String> _keys = new HashSet<>(Arrays.asList(keys));
-        for (String key : map.keySet()) {
-            if (!_keys.contains(key)) {
-                error("INVALID_METADATA_SET", "You can not set the metadata " + key + "; only " + _keys + " are allowed.");
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public void saveSnapshot(String snapshotName, String content, Map<String, String> metadata) {
-        if (!hasOnlyAllowedKeys(metadata, "description")) {
-            return;
-        }
-        SnapshotsClient snapshotsClient = Games.getSnapshotsClient(this.registrar.activity(), currentAccount);
-        Snapshot snapshot = loadedSnapshots.get(snapshotName);
-        if (snapshot == null) {
-            error("SNAPSHOT_NOT_OPENED", "The snapshot with name " + snapshotName + " was not opened before.");
-            return;
-        }
-        snapshot.getSnapshotContents().writeBytes(content.getBytes());
-        SnapshotMetadataChange metadataChange = new SnapshotMetadataChange.Builder()
-                .setDescription(metadata.get("description"))
-                .build();
-        snapshotsClient.commitAndClose(snapshot, metadataChange).addOnSuccessListener(new OnSuccessListener<SnapshotMetadata>() {
-            @Override
-            public void onSuccess(SnapshotMetadata snapshotMetadata) {
-                Map<String, Object> result = new HashMap<>();
-                result.put("status", true);
-                result(result);
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                error("SAVE_SNAPSHOT_ERROR", e);
-            }
-        });
-    }
-
-    public void resolveSnapshotConflict(String snapshotName, String conflictId, String content, Map<String, String> metadata) {
-        if (!hasOnlyAllowedKeys(metadata, "description")) {
-            return;
-        }
-        SnapshotsClient snapshotsClient = Games.getSnapshotsClient(this.registrar.activity(), currentAccount);
-        Snapshot snapshot = loadedSnapshots.get(snapshotName);
-        if (snapshot == null) {
-            error("SNAPSHOT_NOT_OPENED", "The snapshot with name " + snapshotName + " was not opened before.");
-            return;
-        }
-        snapshot.getSnapshotContents().writeBytes(content.getBytes());
-        SnapshotMetadataChange metadataChange = new SnapshotMetadataChange.Builder()
-                .setDescription(metadata.get("description"))
-                .build();
-
-        snapshotsClient.resolveConflict(conflictId, snapshot.getMetadata().getSnapshotId(), metadataChange, snapshot.getSnapshotContents()).addOnSuccessListener(generateCallback(snapshotName)).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                error("RESOLVE_SNAPSHOT_CONFLICT_ERROR", e);
-            }
-        });
-    }
-
-    private Map<String, Object> toMap(Snapshot snapshot) throws IOException {
-        String blob = new String(snapshot.getSnapshotContents().readFully());
-        Map<String, Object> metadata = new HashMap<>();
-        metadata.put("title", snapshot.getMetadata().getTitle());
-        metadata.put("description", snapshot.getMetadata().getDescription());
-        metadata.put("deviceName", snapshot.getMetadata().getDeviceName());
-        metadata.put("snapshotId", snapshot.getMetadata().getSnapshotId());
-        metadata.put("uniqueName", snapshot.getMetadata().getUniqueName());
-        metadata.put("coverImageAspectRatio", snapshot.getMetadata().getCoverImageAspectRatio());
-        metadata.put("coverImageUri", snapshot.getMetadata().getCoverImageUri() == null ? null : snapshot.getMetadata().getCoverImageUri().toString());
-        metadata.put("lastModifiedTimestamp", snapshot.getMetadata().getLastModifiedTimestamp());
-
-        Map<String, Object> data = new HashMap<>();
-        data.put("content", blob);
-        data.put("metadata", metadata);
-
-        return data;
+    public Map<String, Snapshot> getLoadedSnapshot() {
+        return this.loadedSnapshots;
     }
 }
