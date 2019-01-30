@@ -17,3 +17,8 @@
 ## 0.3.1
 
 * Fix concurrency bug when an unexpected exception was thrown
+
+## 0.4.0
+
+* Some refactorings for the Saved Games
+* Adding Leaderboards

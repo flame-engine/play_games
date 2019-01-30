@@ -82,3 +82,18 @@ Here follows an example of the usage of the APIs from the [crystap](https://gith
 Here our data is just a single integer, that we convert to a String in order to save it within the content. Again, your save can be an arbitrarily complex JSON or anything like that. See the full Crystap game for more in-depth details on how to use the API.
 
 There are also APIs for conflict resolution. If you want more robuts integration, check those out in the source code.
+
+## Part 4: Leaderboards
+
+To use Leaderboards, you must create one in the GPGS console. Also, you can regenerate your games-ids files to be able to use the leaderboard name instead of id.
+
+Once that's done, you can use the following APIs that are available:
+
+```dart
+  static Future<SubmitScoreResults> submitScoreByName(String leaderboardName, int score) async;
+  static Future<SubmitScoreResults> submitScoreById(String leaderboardId, int score) async;
+  static Future<ScoreResults> loadPlayerCenteredScoresByName(String leaderboardName, TimeSpan timeSpan, CollectionType collectionType, int maxResults, { bool forceReload = false }) async;
+  static Future<ScoreResults> loadPlayerCenteredScoresById(String leaderboardId, TimeSpan timeSpan, CollectionType collectionType, int maxResults, { bool forceReload = false }) async;
+```
+
+These methods are pretty thin wrappers over the Java/Android APIs, so you can check details about that the official docs. Also, checkout the crystap game for more details on how to implement this feature (better docs are on the way!).
