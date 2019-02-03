@@ -22,3 +22,7 @@
 
 * Some refactorings for the Saved Games
 * Adding Leaderboards
+
+## 0.4.1
+
+* Adding Leaderboard topScores options
