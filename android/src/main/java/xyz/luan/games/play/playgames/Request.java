@@ -135,6 +135,20 @@ public class Request {
             int maxResults = call.argument("maxResults");
             boolean forceReload = call.argument("forceReload");
             this.loadPlayerCenteredScores(leaderboardId, timeSpan, collectionType, maxResults, forceReload);
+        } else if (call.method.equals("loadTopScoresByName")) {
+            String leaderboardName = call.argument("leaderboardName");
+            String timeSpan = call.argument("timeSpan");
+            String collectionType = call.argument("collectionType");
+            int maxResults = call.argument("maxResults");
+            boolean forceReload = call.argument("forceReload");
+            this.loadTopScores(this.getIdByName(leaderboardName), timeSpan, collectionType, maxResults, forceReload);
+        } else if (call.method.equals("loadTopScoresById")) {
+            String leaderboardId = call.argument("leaderboardId");
+            String timeSpan = call.argument("timeSpan");
+            String collectionType = call.argument("collectionType");
+            int maxResults = call.argument("maxResults");
+            boolean forceReload = call.argument("forceReload");
+            this.loadTopScores(leaderboardId, timeSpan, collectionType, maxResults, forceReload);
         } else {
             result.notImplemented();
         }
@@ -394,7 +408,34 @@ public class Request {
 
     public void loadPlayerCenteredScores(String leaderboardId, String timeSpan, String collectionType, int maxResults, boolean forceReload) {
         LeaderboardsClient leaderboardsClient = Games.getLeaderboardsClient(this.registrar.activity(), currentAccount);
-        leaderboardsClient.loadPlayerCenteredScores(leaderboardId, convertTimeSpan(timeSpan), convertCollection(collectionType), maxResults, forceReload).addOnSuccessListener(new OnSuccessListener<AnnotatedData<LeaderboardsClient.LeaderboardScores>>() {
+        leaderboardsClient.loadPlayerCenteredScores(leaderboardId, convertTimeSpan(timeSpan), convertCollection(collectionType), maxResults, forceReload)
+            .addOnSuccessListener(scoreSuccessHandler())
+            .addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    System.out.println("----- leaderboard player centered retrieve failure " + e);
+                    error("LEADERBOARD_PLAYER_CENTERED_FAILURE", e);
+                }
+            }
+        );
+    }
+
+    public void loadTopScores(String leaderboardId, String timeSpan, String collectionType, int maxResults, boolean forceReload) {
+        LeaderboardsClient leaderboardsClient = Games.getLeaderboardsClient(this.registrar.activity(), currentAccount);
+        leaderboardsClient.loadTopScores(leaderboardId, convertTimeSpan(timeSpan), convertCollection(collectionType), maxResults, forceReload)
+            .addOnSuccessListener(scoreSuccessHandler())
+            .addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    System.out.println("----- leaderboard top scores retrieve failure " + e);
+                    error("LEADERBOARD_TOP_SCORES_FAILURE", e);
+                }
+            }
+        );
+    }
+
+    private OnSuccessListener<AnnotatedData<LeaderboardsClient.LeaderboardScores>> scoreSuccessHandler() {
+        return new OnSuccessListener<AnnotatedData<LeaderboardsClient.LeaderboardScores>>() {
             @Override
             public void onSuccess(AnnotatedData<LeaderboardsClient.LeaderboardScores> data) {
                 LeaderboardsClient.LeaderboardScores scores = data.get();
@@ -411,13 +452,7 @@ public class Request {
                 scores.release();
                 result(successMap);
             }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                System.out.println("----- leaderboard retrieve failure " + e);
-                error("LEADERBOARD_FAILURE", e);
-            }
-        });
+        };
     }
 
     private int convertTimeSpan(String timeSpan) {

@@ -210,6 +210,16 @@ class PlayGames {
       ..scoreTag = map['scoreTag'];
   }
 
+  static Future<ScoreResults> loadTopScoresByName(String leaderboardName, TimeSpan timeSpan, CollectionType collectionType, int maxResults, { bool forceReload = false }) async {
+    final Map<dynamic, dynamic> map = await _channel.invokeMethod('loadTopScoresByName', { 'leaderboardName': leaderboardName, 'timeSpan': timeSpan.toString(), 'collectionType': collectionType.toString(), 'maxResults': maxResults, 'forceReload': forceReload });
+    return _parseScoreResults(map);
+  }
+
+  static Future<ScoreResults> loadTopScoresById(String leaderboardId, TimeSpan timeSpan, CollectionType collectionType, int maxResults, { bool forceReload = false }) async {
+    final Map<dynamic, dynamic> map = await _channel.invokeMethod('loadTopScoresById', { 'leaderboardId': leaderboardId, 'timeSpan': timeSpan.toString(), 'collectionType': collectionType.toString(), 'maxResults': maxResults, 'forceReload': forceReload });
+    return _parseScoreResults(map);
+  }
+
   static Future<ScoreResults> loadPlayerCenteredScoresByName(String leaderboardName, TimeSpan timeSpan, CollectionType collectionType, int maxResults, { bool forceReload = false }) async {
     final Map<dynamic, dynamic> map = await _channel.invokeMethod('loadPlayerCenteredScoresByName', { 'leaderboardName': leaderboardName, 'timeSpan': timeSpan.toString(), 'collectionType': collectionType.toString(), 'maxResults': maxResults, 'forceReload': forceReload });
     return _parseScoreResults(map);
