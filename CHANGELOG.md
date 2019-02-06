@@ -26,3 +26,7 @@
 ## 0.4.1
 
 * Adding Leaderboard topScores options
+
+## 0.4.2
+
+* Fix bug when there was no score (null from api)
