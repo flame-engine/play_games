@@ -203,6 +203,9 @@ class PlayGames {
   }
 
   static SubmitScoreSingleResult _parseSubmitSingleScore(Map<dynamic, dynamic> map) {
+    if (map == null) {
+      return null;
+    }
     return SubmitScoreSingleResult()
       ..rawScore = map['rawScore']
       ..formattedScore = map['formattedScore']
