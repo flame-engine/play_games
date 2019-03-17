@@ -384,6 +384,7 @@ public class Request {
     }
 
     public void submitScore(String leaderboardId, Long score) {
+        Log.i(TAG, "Submitting leaderboard, id: " + leaderboardId + "; score: " + score);
         LeaderboardsClient leaderboardsClient = Games.getLeaderboardsClient(this.registrar.activity(), currentAccount);
         leaderboardsClient.submitScoreImmediate(leaderboardId, score).addOnSuccessListener(new OnSuccessListener<ScoreSubmissionData>() {
             @Override
