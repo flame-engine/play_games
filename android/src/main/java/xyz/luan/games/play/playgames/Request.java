@@ -295,7 +295,7 @@ public class Request {
         snapshotsClient.open(snapshotName, true).addOnSuccessListener(generateCallback(snapshotName)).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                System.out.println("----- failure " + e);
+                Log.e(TAG, "Could not open snapshot", e);
                 error("SNAPSHOT_FAILURE", e);
             }
         });
@@ -400,8 +400,8 @@ public class Request {
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                System.out.println("----- leaderboard submit failure " + e);
-                error("LEADERBOARD_FAILURE", e);
+                Log.e(TAG, "Could not submit leadderboard", e);
+                error("LEADERBOARD_SUBMIT_FAILURE", e);
             }
         });
     }
@@ -413,7 +413,7 @@ public class Request {
             .addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
-                    System.out.println("----- leaderboard player centered retrieve failure " + e);
+                    Log.e(TAG, "Could not fetch leaderboard player centered (retrieve failure)", e);
                     error("LEADERBOARD_PLAYER_CENTERED_FAILURE", e);
                 }
             }
@@ -427,7 +427,7 @@ public class Request {
             .addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
-                    System.out.println("----- leaderboard top scores retrieve failure " + e);
+                    Log.e(TAG, "Could not fetch leaderboard top scores (retrieve failure)", e);
                     error("LEADERBOARD_TOP_SCORES_FAILURE", e);
                 }
             }
