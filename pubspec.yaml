@@ -1,6 +1,6 @@
 name: play_games
 description: A simple wrapper on top of Google Play Games Services (GPGS), including auth, achievement, and more.
-version: 0.4.2
+version: 0.4.3
 author: Luan Nico <luannico27@gmail.com>
 homepage: https://github.com/luanpotter/play_games
 
