@@ -12,23 +12,17 @@ import io.flutter.plugin.common.PluginRegistry.Registrar;
 import io.flutter.plugin.common.PluginRegistry.ActivityResultListener;
 
 import android.content.Context;
-import android.content.Intent;
 import android.net.Uri;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.google.android.gms.common.images.ImageManager;
 import com.google.android.gms.games.AnnotatedData;
 
-import com.google.android.gms.auth.api.Auth;
-import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInClient;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.games.SnapshotsClient;
 import com.google.android.gms.games.snapshot.Snapshot;
 import com.google.android.gms.games.snapshot.SnapshotMetadata;
@@ -46,9 +40,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.List;
 import java.util.ArrayList;
@@ -469,11 +461,8 @@ public class Request {
     }
 
     private int convertCollection(String collection) {
-        switch (collection) {
-            case "CollectionType.COLLECTION_PUBLIC":
-                return LeaderboardVariant.COLLECTION_PUBLIC;
-            case "CollectionType.COLLECTION_SOCIAL":
-                return LeaderboardVariant.COLLECTION_SOCIAL;
+        if ("CollectionType.COLLECTION_PUBLIC".equals(collection)) {
+            return LeaderboardVariant.COLLECTION_PUBLIC;
         }
         throw new RuntimeException("Unknown time span...");
     }

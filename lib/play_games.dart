@@ -32,7 +32,7 @@ enum SigninResultType {
 
 enum TimeSpan { TIME_SPAN_DAILY, TIME_SPAN_WEEKLY, TIME_SPAN_ALL_TIME }
 
-enum CollectionType { COLLECTION_PUBLIC, COLLECTION_SOCIAL }
+enum CollectionType { COLLECTION_PUBLIC }
 
 class SubmitScoreSingleResult {
   int rawScore;
@@ -237,9 +237,10 @@ class PlayGames {
       ..scoreTag = map['scoreTag'];
   }
 
-  static Future<ScoreResults> loadTopScoresByName(String leaderboardName,
-      TimeSpan timeSpan, CollectionType collectionType, int maxResults,
-      {bool forceReload = false}) async {
+  static Future<ScoreResults> loadTopScoresByName(
+      String leaderboardName, TimeSpan timeSpan, int maxResults,
+      {CollectionType collectionType = CollectionType.COLLECTION_PUBLIC,
+      bool forceReload = false}) async {
     final Map<dynamic, dynamic> map =
         await _channel.invokeMethod('loadTopScoresByName', {
       'leaderboardName': leaderboardName,
@@ -251,9 +252,10 @@ class PlayGames {
     return _parseScoreResults(map);
   }
 
-  static Future<ScoreResults> loadTopScoresById(String leaderboardId,
-      TimeSpan timeSpan, CollectionType collectionType, int maxResults,
-      {bool forceReload = false}) async {
+  static Future<ScoreResults> loadTopScoresById(
+      String leaderboardId, TimeSpan timeSpan, int maxResults,
+      {CollectionType collectionType = CollectionType.COLLECTION_PUBLIC,
+      bool forceReload = false}) async {
     final Map<dynamic, dynamic> map =
         await _channel.invokeMethod('loadTopScoresById', {
       'leaderboardId': leaderboardId,
@@ -266,11 +268,9 @@ class PlayGames {
   }
 
   static Future<ScoreResults> loadPlayerCenteredScoresByName(
-      String leaderboardName,
-      TimeSpan timeSpan,
-      CollectionType collectionType,
-      int maxResults,
-      {bool forceReload = false}) async {
+      String leaderboardName, TimeSpan timeSpan, int maxResults,
+      {CollectionType collectionType = CollectionType.COLLECTION_PUBLIC,
+      bool forceReload = false}) async {
     final Map<dynamic, dynamic> map =
         await _channel.invokeMethod('loadPlayerCenteredScoresByName', {
       'leaderboardName': leaderboardName,
@@ -282,9 +282,10 @@ class PlayGames {
     return _parseScoreResults(map);
   }
 
-  static Future<ScoreResults> loadPlayerCenteredScoresById(String leaderboardId,
-      TimeSpan timeSpan, CollectionType collectionType, int maxResults,
-      {bool forceReload = false}) async {
+  static Future<ScoreResults> loadPlayerCenteredScoresById(
+      String leaderboardId, TimeSpan timeSpan, int maxResults,
+      {CollectionType collectionType = CollectionType.COLLECTION_PUBLIC,
+      bool forceReload = false}) async {
     final Map<dynamic, dynamic> map =
         await _channel.invokeMethod('loadPlayerCenteredScoresById', {
       'leaderboardId': leaderboardId,
