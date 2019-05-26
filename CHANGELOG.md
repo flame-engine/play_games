@@ -34,3 +34,8 @@
 ## 0.4.3
 
 * Improved loggin
+
+## 0.5.0
+
+* Upgraded to use androix
+* Remove deprecated COLLECTION_SOCIAL option
