@@ -1,6 +1,6 @@
 import Flutter
 import UIKit
-    
+
 public class SwiftPlayGamesPlugin: NSObject, FlutterPlugin {
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(name: "play_games", binaryMessenger: registrar.messenger())
