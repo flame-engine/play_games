@@ -34,6 +34,7 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
     private static final String TAG = PlayGamesPlugin.class.getCanonicalName();
     private static final int RC_SIGN_IN = 9001;
     private static final int RC_ACHIEVEMENT_UI = 9002;
+    private static final int RC_LEADERBOARD_UI = 9004;
 
     private Registrar registrar;
     private PendingOperation pendingOperation;
@@ -70,7 +71,7 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
 
     private void startTransaction(MethodCall call, Result result) {
         if (pendingOperation != null) {
-            throw new IllegalStateException("signIn/showAchievements/saved games/snapshots cannot be used concurrently!");
+            throw new IllegalStateException("signIn/showAchievements/showLeaderboard/saved games/snapshots cannot be used concurrently!");
         }
         pendingOperation = new PendingOperation(call, result);
     }
@@ -91,6 +92,15 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
             startTransaction(call, result);
             try {
                 showAchievements();
+            } catch (Exception ex) {
+                pendingOperation = null;
+                throw ex;
+            }
+        } else if (call.method.equals("showLeaderboard")) {
+            startTransaction(call, result);
+            String leaderboardId = call.argument("leaderboardId");
+            try {
+                showLeaderboard(leaderboardId);
             } catch (Exception ex) {
                 pendingOperation = null;
                 throw ex;
@@ -210,6 +220,21 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
             @Override
             public void onFailure(@NonNull Exception e) {
                 error("ERROR_SHOW_ACHIEVEMENTS", e);
+            }
+        });
+    }
+
+    public void showLeaderboard(String leaderboardId) {
+        Games.getLeaderboardsClient(registrar.activity(), currentAccount).getLeaderboardIntent(leaderboardId)
+                .addOnSuccessListener(new OnSuccessListener<Intent>() {
+                    @Override
+                    public void onSuccess(Intent intent) {
+                        registrar.activity().startActivityForResult(intent, RC_LEADERBOARD_UI);
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                error("ERROR_SHOW_LEADERBOARD", e);
             }
         });
     }

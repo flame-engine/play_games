@@ -148,6 +148,12 @@ class PlayGames {
     return map['closed'];
   }
 
+  static Future<bool> showLeaderboard(String leaderboardId) async {
+    final Map<dynamic, dynamic> map =
+        await _channel.invokeMethod('showLeaderboard',{'leaderboardId': leaderboardId});
+    return map['closed'];
+  }
+
   static Future<Snapshot> openSnapshot(String name) async {
     final Map<dynamic, dynamic> map =
         await _channel.invokeMethod('openSnapshot', {'snapshotName': name});
