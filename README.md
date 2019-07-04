@@ -94,6 +94,7 @@ Once that's done, you can use the following APIs that are available:
   static Future<SubmitScoreResults> submitScoreById(String leaderboardId, int score) async;
   static Future<ScoreResults> loadPlayerCenteredScoresByName(String leaderboardName, TimeSpan timeSpan, CollectionType collectionType, int maxResults, { bool forceReload = false }) async;
   static Future<ScoreResults> loadPlayerCenteredScoresById(String leaderboardId, TimeSpan timeSpan, CollectionType collectionType, int maxResults, { bool forceReload = false }) async;
+  static Future<bool> showLeaderboard(String leaderboardId) async;
 ```
 
 These methods are pretty thin wrappers over the Java/Android APIs, so you can check details about that the official docs. Also, checkout the crystap game for more details on how to implement this feature (better docs are on the way!).
