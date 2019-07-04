@@ -39,3 +39,7 @@
 
 * Upgraded to use androix
 * Remove deprecated COLLECTION_SOCIAL option
+
+## 0.5.1
+
+* adding option to show default Leaderboard (thanks, @vimask)
