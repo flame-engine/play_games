@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ffi';
 import 'dart:typed_data';
 import 'dart:ui';
 
@@ -9,7 +10,9 @@ const MethodChannel _channel = const MethodChannel('play_games');
 class CloudSaveError implements Exception {
   String type;
   String message;
+
   CloudSaveError(this.type, this.message);
+
   @override
   String toString() => 'Error $type, message: $message';
 }
@@ -17,6 +20,7 @@ class CloudSaveError implements Exception {
 class CloudSaveConflictError extends CloudSaveError {
   String conflictId;
   Snapshot local, server;
+
   CloudSaveConflictError(
       String type, String message, this.conflictId, this.local, this.server)
       : super(type, message);
@@ -24,10 +28,12 @@ class CloudSaveConflictError extends CloudSaveError {
 
 enum SigninResultType {
   SUCCESS,
+  NOT_SIGNED_IN,
   ERROR_SIGNIN,
   ERROR_FETCH_PLAYER_PROFILE,
   ERROR_NOT_SIGNED_IN,
-  ERROR_IOS
+  ERROR_IOS,
+  ERROR_SIGN_OUT
 }
 
 enum TimeSpan { TIME_SPAN_DAILY, TIME_SPAN_WEEKLY, TIME_SPAN_ALL_TIME }
@@ -87,6 +93,7 @@ class Account {
 
   Future<Image> get hiResImage async =>
       await _fetchToMemory(await _channel.invokeMethod('getHiResImage'));
+
   Future<Image> get iconImage async =>
       await _fetchToMemory(await _channel.invokeMethod('getIconImage'));
 }
@@ -149,8 +156,8 @@ class PlayGames {
   }
 
   static Future<bool> showLeaderboard(String leaderboardId) async {
-    final Map<dynamic, dynamic> map =
-        await _channel.invokeMethod('showLeaderboard', {'leaderboardId': leaderboardId});
+    final Map<dynamic, dynamic> map = await _channel
+        .invokeMethod('showLeaderboard', {'leaderboardId': leaderboardId});
     return map['closed'];
   }
 
@@ -338,5 +345,31 @@ class PlayGames {
       result.message = map['message'];
     }
     return result;
+  }
+
+  static Future<SigninResult> getLastSignedInAccount() async {
+    final Map<dynamic, dynamic> map =
+        await _channel.invokeMethod('getLastSignedInAccount');
+    SigninResultType type = _typeFromStr(map['type']);
+    SigninResult result = new SigninResult()..type = type;
+    if (type != SigninResultType.NOT_SIGNED_IN) {
+      if (type == SigninResultType.SUCCESS) {
+        result.account = new Account()
+          ..id = map['id']
+          ..displayName = map['displayName']
+          ..email = map['email']
+          ..hiResImageUri = map['hiResImageUri']
+          ..iconImageUri = map['iconImageUri'];
+      } else {
+        result.message = map['message'];
+      }
+    }
+    return result;
+  }
+
+  static Future<Void> signOut() async {
+    final Map<dynamic, dynamic> map = await _channel.invokeMethod('signOut');
+
+    return Void();
   }
 }

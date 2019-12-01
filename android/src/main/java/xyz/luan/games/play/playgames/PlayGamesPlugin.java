@@ -2,7 +2,7 @@ package xyz.luan.games.play.playgames;
 
 import android.content.Intent;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+
 import android.util.Log;
 
 import com.google.android.gms.auth.api.Auth;
@@ -88,7 +88,31 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
                 pendingOperation = null;
                 throw ex;
             }
-        } else if (call.method.equals("showAchievements")) {
+        } else if(call.method.equals("signOut")){
+            startTransaction(call, result);
+            try {
+                signOut();
+            } catch (Exception ex) {
+                pendingOperation = null;
+                throw ex;
+            }
+        } else if(call.method.equals("getLastSignedInAccount")){
+            startTransaction(call, result);
+            try{
+                GoogleSignInAccount account = getLastSignedInAccount();
+                if(account != null)
+                    handleSuccess(account);
+                else{
+                    Map<String, Object> successMap = new HashMap<>();
+                    successMap.put("type", "NOT_SIGNED_IN");
+                    result(successMap);
+                }
+            }catch (Exception ex) {
+                pendingOperation = null;
+                throw ex;
+            }
+        }
+        else if (call.method.equals("showAchievements")) {
             startTransaction(call, result);
             try {
                 showAchievements();
@@ -121,6 +145,31 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
             GoogleSignInOptions opts = builder.build();
             GoogleSignInClient signInClient = GoogleSignIn.getClient(registrar.activity(), opts);
             silentSignIn(signInClient);
+    }
+
+    private void signOut(){
+        GoogleSignInOptions.Builder builder = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_GAMES_SIGN_IN);
+        GoogleSignInOptions opts = builder.build();
+        GoogleSignInClient signInClient = GoogleSignIn.getClient(registrar.activity(), opts);
+        signInClient.signOut().addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                currentAccount = null;
+                Map<String, Object> successMap = new HashMap<>();
+                successMap.put("type", "SUCCESS");
+                result(successMap);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                error("ERROR_SIGN_OUT", e);
+                Log.i(TAG, "Failed to signout", e);
+            }
+        });;
+    }
+
+    private GoogleSignInAccount getLastSignedInAccount(){
+        return GoogleSignIn.getLastSignedInAccount(registrar.activity());
     }
 
     private void explicitSignIn(GoogleSignInClient signInClient) {
