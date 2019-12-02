@@ -237,7 +237,7 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
         if (pendingOperation == null) {
             return false;
         }
-        if (requestCode == RC_ACHIEVEMENT_UI) {
+        if (requestCode == RC_ACHIEVEMENT_UI || requestCode == RC_LEADERBOARD_UI) {
             Map<String, Object> result = new HashMap<>();
             result.put("closed", true);
             result(result);
