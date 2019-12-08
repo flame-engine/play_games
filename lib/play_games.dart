@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ffi';
 import 'dart:typed_data';
 import 'dart:ui';
 
@@ -373,9 +372,7 @@ class PlayGames {
     return result;
   }
 
-  static Future<Void> signOut() async {
-    final Map<dynamic, dynamic> map = await _channel.invokeMethod('signOut');
-
-    return Void();
+  static Future signOut() async {
+    return await _channel.invokeMethod('signOut');
   }
 }

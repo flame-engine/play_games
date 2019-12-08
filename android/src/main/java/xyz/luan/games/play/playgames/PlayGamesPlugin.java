@@ -175,7 +175,7 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
                 Log.i(TAG, "Failed to signout", e);
             }
         });
-        ;
+
     }
 
     private GoogleSignInAccount getLastSignedInAccount() {
