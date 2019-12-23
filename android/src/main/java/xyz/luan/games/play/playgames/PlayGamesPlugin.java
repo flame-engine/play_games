@@ -1,8 +1,9 @@
 package xyz.luan.games.play.playgames;
 
 import android.content.Intent;
+
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+
 import android.util.Log;
 
 import com.google.android.gms.auth.api.Auth;
@@ -35,6 +36,7 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
     private static final int RC_SIGN_IN = 9001;
     private static final int RC_ACHIEVEMENT_UI = 9002;
     private static final int RC_LEADERBOARD_UI = 9004;
+    private static final int RC_ALL_LEADERBOARD_UI = 9005;
 
     private Registrar registrar;
     private PendingOperation pendingOperation;
@@ -88,6 +90,29 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
                 pendingOperation = null;
                 throw ex;
             }
+        } else if (call.method.equals("signOut")) {
+            startTransaction(call, result);
+            try {
+                signOut();
+            } catch (Exception ex) {
+                pendingOperation = null;
+                throw ex;
+            }
+        } else if (call.method.equals("getLastSignedInAccount")) {
+            startTransaction(call, result);
+            try {
+                GoogleSignInAccount account = getLastSignedInAccount();
+                if (account != null) {
+                    handleSuccess(account);
+                } else {
+                    Map<String, Object> successMap = new HashMap<>();
+                    successMap.put("type", "NOT_SIGNED_IN");
+                    result(successMap);
+                }
+            } catch (Exception ex) {
+                pendingOperation = null;
+                throw ex;
+            }
         } else if (call.method.equals("showAchievements")) {
             startTransaction(call, result);
             try {
@@ -105,22 +130,56 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
                 pendingOperation = null;
                 throw ex;
             }
+        } else if (call.method.equals("showAllLeaderboards")) {
+            startTransaction(call, result);
+            try {
+                showAllLeaderboards();
+            } catch (Exception ex) {
+                pendingOperation = null;
+                throw ex;
+            }
         } else {
             new Request(this, currentAccount, registrar, call, result).handle();
         }
     }
 
     private void signIn(boolean requestEmail, boolean scopeSnapshot) {
-            GoogleSignInOptions.Builder builder = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_GAMES_SIGN_IN);
-            if (requestEmail) {
-                builder.requestEmail();
+        GoogleSignInOptions.Builder builder = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_GAMES_SIGN_IN);
+        if (requestEmail) {
+            builder.requestEmail();
+        }
+        if (scopeSnapshot) {
+            builder.requestScopes(Drive.SCOPE_APPFOLDER);
+        }
+        GoogleSignInOptions opts = builder.build();
+        GoogleSignInClient signInClient = GoogleSignIn.getClient(registrar.activity(), opts);
+        silentSignIn(signInClient);
+    }
+
+    private void signOut() {
+        GoogleSignInOptions.Builder builder = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_GAMES_SIGN_IN);
+        GoogleSignInOptions opts = builder.build();
+        GoogleSignInClient signInClient = GoogleSignIn.getClient(registrar.activity(), opts);
+        signInClient.signOut().addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                currentAccount = null;
+                Map<String, Object> successMap = new HashMap<>();
+                successMap.put("type", "SUCCESS");
+                result(successMap);
             }
-            if (scopeSnapshot) {
-                builder.requestScopes(Drive.SCOPE_APPFOLDER);
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                error("ERROR_SIGN_OUT", e);
+                Log.i(TAG, "Failed to signout", e);
             }
-            GoogleSignInOptions opts = builder.build();
-            GoogleSignInClient signInClient = GoogleSignIn.getClient(registrar.activity(), opts);
-            silentSignIn(signInClient);
+        });
+
+    }
+
+    private GoogleSignInAccount getLastSignedInAccount() {
+        return GoogleSignIn.getLastSignedInAccount(registrar.activity());
     }
 
     private void explicitSignIn(GoogleSignInClient signInClient) {
@@ -188,7 +247,7 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
         if (pendingOperation == null) {
             return false;
         }
-        if (requestCode == RC_ACHIEVEMENT_UI) {
+        if (requestCode == RC_ACHIEVEMENT_UI || requestCode == RC_LEADERBOARD_UI || requestCode == RC_ALL_LEADERBOARD_UI) {
             Map<String, Object> result = new HashMap<>();
             result.put("closed", true);
             result(result);
@@ -210,13 +269,12 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
     }
 
     public void showAchievements() {
-        Games.getAchievementsClient(registrar.activity(), currentAccount).getAchievementsIntent()
-                .addOnSuccessListener(new OnSuccessListener<Intent>() {
-                    @Override
-                    public void onSuccess(Intent intent) {
-                        registrar.activity().startActivityForResult(intent, RC_ACHIEVEMENT_UI);
-                    }
-                }).addOnFailureListener(new OnFailureListener() {
+        Games.getAchievementsClient(registrar.activity(), currentAccount).getAchievementsIntent().addOnSuccessListener(new OnSuccessListener<Intent>() {
+            @Override
+            public void onSuccess(Intent intent) {
+                registrar.activity().startActivityForResult(intent, RC_ACHIEVEMENT_UI);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
                 error("ERROR_SHOW_ACHIEVEMENTS", e);
@@ -225,13 +283,26 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
     }
 
     public void showLeaderboard(String leaderboardId) {
-        Games.getLeaderboardsClient(registrar.activity(), currentAccount).getLeaderboardIntent(leaderboardId)
-                .addOnSuccessListener(new OnSuccessListener<Intent>() {
-                    @Override
-                    public void onSuccess(Intent intent) {
-                        registrar.activity().startActivityForResult(intent, RC_LEADERBOARD_UI);
-                    }
-                }).addOnFailureListener(new OnFailureListener() {
+        Games.getLeaderboardsClient(registrar.activity(), currentAccount).getLeaderboardIntent(leaderboardId).addOnSuccessListener(new OnSuccessListener<Intent>() {
+            @Override
+            public void onSuccess(Intent intent) {
+                registrar.activity().startActivityForResult(intent, RC_LEADERBOARD_UI);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                error("ERROR_SHOW_LEADERBOARD", e);
+            }
+        });
+    }
+
+    public void showAllLeaderboards() {
+        Games.getLeaderboardsClient(registrar.activity(), currentAccount).getAllLeaderboardsIntent().addOnSuccessListener(new OnSuccessListener<Intent>() {
+            @Override
+            public void onSuccess(Intent intent) {
+                registrar.activity().startActivityForResult(intent, RC_ALL_LEADERBOARD_UI);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
                 error("ERROR_SHOW_LEADERBOARD", e);
