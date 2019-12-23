@@ -353,7 +353,7 @@ Firstly, add `play_games` to your `pubspec.yaml` file:
 dependencies:
   flutter:
     sdk: flutter
-  play_games: 0.5.1
+  play_games: 0.5.2
 ```
 
 And run `flutter pub get` to update. That's not enough, though! This plugin depends on Google's dependencies only as API, meaning the implementation must be provided by the application. That is done so that you can add the version you desired, as long as they are API compatible. So you need to add a couple dependencies on both your `build.gradle` files (the root and module).

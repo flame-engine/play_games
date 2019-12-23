@@ -43,3 +43,7 @@
 ## 0.5.1
 
 * adding option to show default Leaderboard (thanks, @vimask)
+
+## 0.5.2
+
+* adding methods for signing out, getting last account and displaying leaderboard list (thanks, @kuba91)
