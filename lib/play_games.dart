@@ -162,7 +162,7 @@ class PlayGames {
 
   static Future<bool> showAllLeaderboards() async {
     final Map<dynamic, dynamic> map =
-    await _channel.invokeMethod('showAllLeaderboards');
+        await _channel.invokeMethod('showAllLeaderboards');
     return map['closed'];
   }
 
