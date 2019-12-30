@@ -47,3 +47,7 @@
 ## 0.5.2
 
 * adding methods for signing out, getting last account and displaying leaderboard list (thanks, @kuba91)
+
+## 0.5.3
+
+* fix leak on the leaderboard methods (thanks, @r1sim)
