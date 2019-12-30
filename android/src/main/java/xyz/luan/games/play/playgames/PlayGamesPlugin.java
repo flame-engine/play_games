@@ -273,6 +273,7 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
             @Override
             public void onSuccess(Intent intent) {
                 registrar.activity().startActivityForResult(intent, RC_ACHIEVEMENT_UI);
+                result(new HashMap<>());
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
@@ -287,6 +288,7 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
             @Override
             public void onSuccess(Intent intent) {
                 registrar.activity().startActivityForResult(intent, RC_LEADERBOARD_UI);
+                result(new HashMap<>());
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
@@ -301,6 +303,7 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
             @Override
             public void onSuccess(Intent intent) {
                 registrar.activity().startActivityForResult(intent, RC_ALL_LEADERBOARD_UI);
+                result(new HashMap<>());
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
