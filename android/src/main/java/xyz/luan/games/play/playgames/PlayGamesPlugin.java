@@ -56,19 +56,18 @@ public class PlayGamesPlugin implements FlutterPlugin, ActivityAware, MethodCall
         channel.setMethodCallHandler(playGamesPlugin);
     }
 
+    public PlayGamesPlugin() { }
+
     public PlayGamesPlugin(Registrar registrar) {
         this.context = registrar.activity();
         this.activity = registrar.activity();
     }
 
-    public PlayGamesPlugin(Context context) {
-        this.context = context;
-    }
-
     @Override
     public void onAttachedToEngine(FlutterPluginBinding binding) {
         final MethodChannel channel = new MethodChannel(binding.getBinaryMessenger(), "play_games");
-        channel.setMethodCallHandler(new PlayGamesPlugin(binding.getApplicationContext()));
+        context = binding.getApplicationContext();
+        channel.setMethodCallHandler(this);
     }
 
     @Override
