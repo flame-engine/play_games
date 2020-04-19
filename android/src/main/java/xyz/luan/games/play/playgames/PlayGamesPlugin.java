@@ -127,8 +127,9 @@ public class PlayGamesPlugin implements FlutterPlugin, ActivityAware, MethodCall
             startTransaction(call, result);
             boolean requestEmail = getPropOrDefault(call, "requestEmail", true);
             boolean scopeSnapshot = getPropOrDefault(call, "scopeSnapshot", false);
+            boolean silentSignInOnly = getPropOrDefault(call, "silentSignInOnly", false);
             try {
-                signIn(requestEmail, scopeSnapshot);
+                signIn(requestEmail, scopeSnapshot, silentSignInOnly);
             } catch (Exception ex) {
                 pendingOperation = null;
                 throw ex;
@@ -186,7 +187,7 @@ public class PlayGamesPlugin implements FlutterPlugin, ActivityAware, MethodCall
         }
     }
 
-    private void signIn(boolean requestEmail, boolean scopeSnapshot) {
+    private void signIn(boolean requestEmail, boolean scopeSnapshot, boolean silentSignInOnly) {
         GoogleSignInOptions.Builder builder = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_GAMES_SIGN_IN);
         if (requestEmail) {
             builder.requestEmail();
@@ -196,7 +197,7 @@ public class PlayGamesPlugin implements FlutterPlugin, ActivityAware, MethodCall
         }
         GoogleSignInOptions opts = builder.build();
         GoogleSignInClient signInClient = GoogleSignIn.getClient(context, opts);
-        silentSignIn(signInClient);
+        silentSignIn(signInClient, silentSignInOnly);
     }
 
     private void signOut() {
@@ -230,7 +231,7 @@ public class PlayGamesPlugin implements FlutterPlugin, ActivityAware, MethodCall
         activity.startActivityForResult(intent, RC_SIGN_IN);
     }
 
-    private void silentSignIn(final GoogleSignInClient signInClient) {
+    private void silentSignIn(final GoogleSignInClient signInClient, final boolean silentSignInOnly) {
         signInClient.silentSignIn().addOnSuccessListener(new OnSuccessListener<GoogleSignInAccount>() {
             @Override
             public void onSuccess(GoogleSignInAccount googleSignInAccount) {
@@ -239,8 +240,13 @@ public class PlayGamesPlugin implements FlutterPlugin, ActivityAware, MethodCall
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                Log.i(TAG, "Failed to silent signin, trying explicit signin", e);
-                explicitSignIn(signInClient);
+                if(silentSignInOnly) {
+                    Log.i(TAG, "Failed to silent signin", e);
+                    error("ERROR_SIGNIN", e);
+                } else {
+                    Log.i(TAG, "Failed to silent signin, trying explicit signin", e);
+                    explicitSignIn(signInClient);
+                }
             }
         });
     }
