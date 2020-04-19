@@ -51,7 +51,7 @@ public class PlayGamesPlugin implements FlutterPlugin, ActivityAware, MethodCall
 
     public static void registerWith(Registrar registrar) {
         final MethodChannel channel = new MethodChannel(registrar.messenger(), "play_games");
-        PlayGamesPlugin playGamesPlugin = new  PlayGamesPlugin(registrar);
+        PlayGamesPlugin playGamesPlugin = new PlayGamesPlugin(registrar);
         registrar.addActivityResultListener(playGamesPlugin);
         channel.setMethodCallHandler(playGamesPlugin);
     }
