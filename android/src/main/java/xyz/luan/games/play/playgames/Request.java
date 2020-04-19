@@ -11,6 +11,7 @@ import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
 import io.flutter.plugin.common.PluginRegistry.ActivityResultListener;
 
+import android.app.Activity;
 import android.content.Context;
 import android.net.Uri;
 import android.graphics.Bitmap;
@@ -53,15 +54,15 @@ public class Request {
     private static final String TAG = Request.class.getCanonicalName();
 
     private GoogleSignInAccount currentAccount;
-    private Registrar registrar;
+    private Activity activity;
     private MethodCall call;
     private Result result;
     private PlayGamesPlugin pluginRef;
 
-    public Request(PlayGamesPlugin pluginRef, GoogleSignInAccount currentAccount, Registrar registrar, MethodCall call, Result result) {
+    public Request(PlayGamesPlugin pluginRef, GoogleSignInAccount currentAccount, Activity activity, MethodCall call, Result result) {
         this.pluginRef = pluginRef;
         this.currentAccount = currentAccount;
-        this.registrar = registrar;
+        this.activity = activity;
         this.call = call;
         this.result = result;
     }
@@ -149,13 +150,13 @@ public class Request {
     }
 
     private String getIdByName(String name) {
-        Context ctx = registrar.context();
+        Context ctx = activity;
         int resId = ctx.getResources().getIdentifier(name, "string", ctx.getPackageName());
         return ctx.getString(resId);
     }
 
     public void unlockAchievement(String id) {
-        Games.getAchievementsClient(registrar.activity(), currentAccount).unlockImmediate(id)
+        Games.getAchievementsClient(activity, currentAccount).unlockImmediate(id)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void a) {
@@ -171,7 +172,7 @@ public class Request {
     }
 
     public void incrementAchievement(String id, int amount) {
-        Games.getAchievementsClient(registrar.activity(), currentAccount).incrementImmediate(id, amount)
+        Games.getAchievementsClient(activity, currentAccount).incrementImmediate(id, amount)
                 .addOnSuccessListener(new OnSuccessListener<Boolean>() {
                     @Override
                     public void onSuccess(Boolean b) {
@@ -187,9 +188,9 @@ public class Request {
     }
 
     public void setPopupOptions(boolean show, int gravity) {
-        GamesClient gamesClient = Games.getGamesClient(registrar.activity(), currentAccount);
+        GamesClient gamesClient = Games.getGamesClient(activity, currentAccount);
         if (show) {
-            gamesClient.setViewForPopups(registrar.view());
+            gamesClient.setViewForPopups(activity.findViewById(android.R.id.content));
             gamesClient.setGravityForPopups(gravity);
         } else {
             gamesClient.setViewForPopups(null);
@@ -214,7 +215,7 @@ public class Request {
     }
 
     public void getHiResImage() {
-        PlayersClient playersClient = Games.getPlayersClient(registrar.activity(), currentAccount);
+        PlayersClient playersClient = Games.getPlayersClient(activity, currentAccount);
         playersClient.getCurrentPlayer().addOnSuccessListener(new OnSuccessListener<Player>() {
             @Override
             public void onSuccess(Player player) {
@@ -224,7 +225,7 @@ public class Request {
     }
 
     public void getIconImage() {
-        PlayersClient playersClient = Games.getPlayersClient(registrar.activity(), currentAccount);
+        PlayersClient playersClient = Games.getPlayersClient(activity, currentAccount);
         playersClient.getCurrentPlayer().addOnSuccessListener(new OnSuccessListener<Player>() {
             @Override
             public void onSuccess(Player player) {
@@ -239,7 +240,7 @@ public class Request {
             data.put("bytes", null);
             result(data);
         }
-        ImageManager manager = ImageManager.create(registrar.context());
+        ImageManager manager = ImageManager.create(activity);
         manager.loadImage(new ImageManager.OnImageLoadedListener() {
             @Override
             public void onImageLoaded(Uri uri1, Drawable drawable, boolean isRequestedDrawable) {
@@ -285,7 +286,7 @@ public class Request {
     }
 
     public void openSnapshot(String snapshotName) {
-        SnapshotsClient snapshotsClient = Games.getSnapshotsClient(this.registrar.activity(), currentAccount);
+        SnapshotsClient snapshotsClient = Games.getSnapshotsClient(activity, currentAccount);
         snapshotsClient.open(snapshotName, true).addOnSuccessListener(generateCallback(snapshotName)).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
@@ -310,7 +311,7 @@ public class Request {
         if (!hasOnlyAllowedKeys(metadata, "description")) {
             return;
         }
-        SnapshotsClient snapshotsClient = Games.getSnapshotsClient(this.registrar.activity(), currentAccount);
+        SnapshotsClient snapshotsClient = Games.getSnapshotsClient(activity, currentAccount);
         Snapshot snapshot = pluginRef.getLoadedSnapshot().get(snapshotName);
         if (snapshot == null) {
             error("SNAPSHOT_NOT_OPENED", "The snapshot with name " + snapshotName + " was not opened before.");
@@ -339,7 +340,7 @@ public class Request {
         if (!hasOnlyAllowedKeys(metadata, "description")) {
             return;
         }
-        SnapshotsClient snapshotsClient = Games.getSnapshotsClient(this.registrar.activity(), currentAccount);
+        SnapshotsClient snapshotsClient = Games.getSnapshotsClient(activity, currentAccount);
         Snapshot snapshot = pluginRef.getLoadedSnapshot().get(snapshotName);
         if (snapshot == null) {
             error("SNAPSHOT_NOT_OPENED", "The snapshot with name " + snapshotName + " was not opened before.");
@@ -379,7 +380,7 @@ public class Request {
 
     public void submitScore(String leaderboardId, Long score) {
         Log.i(TAG, "Submitting leaderboard, id: " + leaderboardId + "; score: " + score);
-        LeaderboardsClient leaderboardsClient = Games.getLeaderboardsClient(this.registrar.activity(), currentAccount);
+        LeaderboardsClient leaderboardsClient = Games.getLeaderboardsClient(activity, currentAccount);
         leaderboardsClient.submitScoreImmediate(leaderboardId, score).addOnSuccessListener(new OnSuccessListener<ScoreSubmissionData>() {
             @Override
             public void onSuccess(ScoreSubmissionData data) {
@@ -402,7 +403,7 @@ public class Request {
     }
 
     public void loadPlayerCenteredScores(String leaderboardId, String timeSpan, String collectionType, int maxResults, boolean forceReload) {
-        LeaderboardsClient leaderboardsClient = Games.getLeaderboardsClient(this.registrar.activity(), currentAccount);
+        LeaderboardsClient leaderboardsClient = Games.getLeaderboardsClient(activity, currentAccount);
         leaderboardsClient.loadPlayerCenteredScores(leaderboardId, convertTimeSpan(timeSpan), convertCollection(collectionType), maxResults, forceReload)
                 .addOnSuccessListener(scoreSuccessHandler())
                 .addOnFailureListener(new OnFailureListener() {
@@ -416,7 +417,7 @@ public class Request {
     }
 
     public void loadTopScores(String leaderboardId, String timeSpan, String collectionType, int maxResults, boolean forceReload) {
-        LeaderboardsClient leaderboardsClient = Games.getLeaderboardsClient(this.registrar.activity(), currentAccount);
+        LeaderboardsClient leaderboardsClient = Games.getLeaderboardsClient(activity, currentAccount);
         leaderboardsClient.loadTopScores(leaderboardId, convertTimeSpan(timeSpan), convertCollection(collectionType), maxResults, forceReload)
                 .addOnSuccessListener(scoreSuccessHandler())
                 .addOnFailureListener(new OnFailureListener() {
