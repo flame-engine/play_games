@@ -2,6 +2,8 @@
 
 Use Google Play Games Services on your Flutter app; this allows for signin and achievements so far, but more additions are very welcome. If you like it, give us a star and feel free to help and contribute.
 
+This is android only for now but iOS is gracefully handled so you can define what happens.
+
 ## Part 1: Sign In
 
 Call the sign in method to sign in; you must check if the login was successufully.
