@@ -1,18 +1,18 @@
 ## 0.0.1
 
-* First version, very basic signin and fetch avatar.
+* Structure first version, with very basic signin and fetch avatar.
 
 ## 0.1.0
 
-* Adding Achievements
+* Add Achievements
 
 ## 0.2.0
 
-* Adding Saved Games
+* Add Saved Games
 
 ## 0.3.0
 
-* Adding conflict resolution to Saved Games
+* Add conflict resolution to Saved Games
 
 ## 0.3.1
 
@@ -20,34 +20,38 @@
 
 ## 0.4.0
 
-* Some refactorings for the Saved Games
-* Adding Leaderboards
+* Apply some refactorings for the Saved Games
+* Add Leaderboards
 
 ## 0.4.1
 
-* Adding Leaderboard topScores options
+* Add Leaderboard topScores options
 
 ## 0.4.2
 
-* Fix bug when there was no score (null from api)
+* Fix a bug when there was no score (null from api)
 
 ## 0.4.3
 
-* Improved loggin
+* Improve loggin
 
 ## 0.5.0
 
-* Upgraded to use androix
+* Upgrade to use androix
 * Remove deprecated COLLECTION_SOCIAL option
 
 ## 0.5.1
 
-* adding option to show default Leaderboard (thanks, @vimask)
+* Add option to show default Leaderboard (thanks, @vimask)
 
 ## 0.5.2
 
-* adding methods for signing out, getting last account and displaying leaderboard list (thanks, @kuba91)
+* Add methods for signing out, getting last account and displaying leaderboard list (thanks, @kuba91)
 
 ## 0.5.3
 
-* fix leak on the leaderboard methods (thanks, @r1sim)
+* Fix leak on the leaderboard methods (thanks, @r1sim)
+
+## 0.5.4
+
+* Fix behaviour with newer iOS versions
