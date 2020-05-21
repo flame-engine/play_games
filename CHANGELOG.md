@@ -55,3 +55,7 @@
 ## 0.5.4
 
 * Fix behaviour with newer iOS versions
+
+## 0.5.5
+
+* Fix bug on iOS due to new pubspec format
