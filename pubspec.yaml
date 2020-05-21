@@ -22,4 +22,4 @@ flutter:
         package: xyz.luan.games.play.playgames
         pluginClass: PlayGamesPlugin
       ios:
-        pluginClass: AudioplayersPlugin
+        pluginClass: PlayGamesPlugin
