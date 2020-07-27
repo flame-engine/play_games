@@ -56,7 +56,7 @@ public class PlayGamesPlugin implements FlutterPlugin, ActivityAware, MethodCall
         channel.setMethodCallHandler(playGamesPlugin);
     }
 
-    public PlayGamesPlugin() { }
+    public PlayGamesPlugin() {}
 
     public PlayGamesPlugin(Registrar registrar) {
         this.context = registrar.activity();
@@ -72,7 +72,6 @@ public class PlayGamesPlugin implements FlutterPlugin, ActivityAware, MethodCall
 
     @Override
     public void onDetachedFromEngine(FlutterPluginBinding binding) {
-
     }
 
     @Override
@@ -240,7 +239,7 @@ public class PlayGamesPlugin implements FlutterPlugin, ActivityAware, MethodCall
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                if(silentSignInOnly) {
+                if (silentSignInOnly) {
                     Log.i(TAG, "Failed to silent signin", e);
                     error("ERROR_SIGNIN", e);
                 } else {
