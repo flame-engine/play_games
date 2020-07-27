@@ -1,10 +1,11 @@
 name: play_games
 description: A simple wrapper on top of Google Play Games Services (GPGS), including auth, achievement, and more.
-version: 0.5.3
+version: 0.5.5
 homepage: https://github.com/luanpotter/play_games
 
 environment:
-  sdk: ">=2.0.0-dev.68.0 <3.0.0"
+  sdk: ">=2.6.0 <3.0.0"
+  flutter: ">=1.10.0 <2.0.0"
 
 dependencies:
   flutter:
@@ -13,10 +14,12 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  play_games_example:
-    path: example/
 
 flutter:
   plugin:
-    androidPackage: xyz.luan.games.play.playgames
-    pluginClass: PlayGamesPlugin
+    platforms:
+      android:
+        package: xyz.luan.games.play.playgames
+        pluginClass: PlayGamesPlugin
+      ios:
+        pluginClass: PlayGamesPlugin
