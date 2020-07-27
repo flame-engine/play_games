@@ -8,6 +8,6 @@ public class EmbeddingV1Activity extends FlutterActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        PlayGamesPlugin.registerWith(registrarFor("xyz.luan.games.play.playgames.PlayGamesPlugin"));
+        PlayGamesPlugin.registerWith(registrarFor(PlayGamesPlugin.class.getQualifiedName()));
     }
 }
