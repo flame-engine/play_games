@@ -1,5 +1,7 @@
 package xyz.luan.games.play.playgames;
 
+import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 
 import androidx.annotation.NonNull;
@@ -23,6 +25,9 @@ import com.google.android.gms.games.snapshot.Snapshot;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.flutter.embedding.engine.plugins.FlutterPlugin;
+import io.flutter.embedding.engine.plugins.activity.ActivityAware;
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
@@ -30,7 +35,7 @@ import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry.ActivityResultListener;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
 
-public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListener {
+public class PlayGamesPlugin implements FlutterPlugin, ActivityAware, MethodCallHandler, ActivityResultListener {
 
     private static final String TAG = PlayGamesPlugin.class.getCanonicalName();
     private static final int RC_SIGN_IN = 9001;
@@ -38,19 +43,56 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
     private static final int RC_LEADERBOARD_UI = 9004;
     private static final int RC_ALL_LEADERBOARD_UI = 9005;
 
-    private Registrar registrar;
+    private Context context;
+    private Activity activity;
     private PendingOperation pendingOperation;
     private GoogleSignInAccount currentAccount;
     private Map<String, Snapshot> loadedSnapshots = new HashMap<>();
 
     public static void registerWith(Registrar registrar) {
         final MethodChannel channel = new MethodChannel(registrar.messenger(), "play_games");
-        channel.setMethodCallHandler(new PlayGamesPlugin(registrar));
+        PlayGamesPlugin playGamesPlugin = new PlayGamesPlugin(registrar);
+        registrar.addActivityResultListener(playGamesPlugin);
+        channel.setMethodCallHandler(playGamesPlugin);
     }
 
+    public PlayGamesPlugin() {}
+
     public PlayGamesPlugin(Registrar registrar) {
-        this.registrar = registrar;
-        this.registrar.addActivityResultListener(this);
+        this.context = registrar.activity();
+        this.activity = registrar.activity();
+    }
+
+    @Override
+    public void onAttachedToEngine(FlutterPluginBinding binding) {
+        final MethodChannel channel = new MethodChannel(binding.getBinaryMessenger(), "play_games");
+        context = binding.getApplicationContext();
+        channel.setMethodCallHandler(this);
+    }
+
+    @Override
+    public void onDetachedFromEngine(FlutterPluginBinding binding) {
+    }
+
+    @Override
+    public void onAttachedToActivity(ActivityPluginBinding binding) {
+        activity = binding.getActivity();
+        binding.addActivityResultListener(this);
+    }
+
+    @Override
+    public void onDetachedFromActivityForConfigChanges() {
+        activity = null;
+    }
+
+    @Override
+    public void onReattachedToActivityForConfigChanges(ActivityPluginBinding binding) {
+        activity = binding.getActivity();
+    }
+
+    @Override
+    public void onDetachedFromActivity() {
+        activity = null;
     }
 
     private static class PendingOperation {
@@ -84,8 +126,9 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
             startTransaction(call, result);
             boolean requestEmail = getPropOrDefault(call, "requestEmail", true);
             boolean scopeSnapshot = getPropOrDefault(call, "scopeSnapshot", false);
+            boolean silentSignInOnly = getPropOrDefault(call, "silentSignInOnly", false);
             try {
-                signIn(requestEmail, scopeSnapshot);
+                signIn(requestEmail, scopeSnapshot, silentSignInOnly);
             } catch (Exception ex) {
                 pendingOperation = null;
                 throw ex;
@@ -139,11 +182,11 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
                 throw ex;
             }
         } else {
-            new Request(this, currentAccount, registrar, call, result).handle();
+            new Request(this, currentAccount, activity, call, result).handle();
         }
     }
 
-    private void signIn(boolean requestEmail, boolean scopeSnapshot) {
+    private void signIn(boolean requestEmail, boolean scopeSnapshot, boolean silentSignInOnly) {
         GoogleSignInOptions.Builder builder = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_GAMES_SIGN_IN);
         if (requestEmail) {
             builder.requestEmail();
@@ -152,14 +195,14 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
             builder.requestScopes(Drive.SCOPE_APPFOLDER);
         }
         GoogleSignInOptions opts = builder.build();
-        GoogleSignInClient signInClient = GoogleSignIn.getClient(registrar.activity(), opts);
-        silentSignIn(signInClient);
+        GoogleSignInClient signInClient = GoogleSignIn.getClient(context, opts);
+        silentSignIn(signInClient, silentSignInOnly);
     }
 
     private void signOut() {
         GoogleSignInOptions.Builder builder = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_GAMES_SIGN_IN);
         GoogleSignInOptions opts = builder.build();
-        GoogleSignInClient signInClient = GoogleSignIn.getClient(registrar.activity(), opts);
+        GoogleSignInClient signInClient = GoogleSignIn.getClient(context, opts);
         signInClient.signOut().addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void aVoid) {
@@ -179,15 +222,15 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
     }
 
     private GoogleSignInAccount getLastSignedInAccount() {
-        return GoogleSignIn.getLastSignedInAccount(registrar.activity());
+        return GoogleSignIn.getLastSignedInAccount(context);
     }
 
     private void explicitSignIn(GoogleSignInClient signInClient) {
         Intent intent = signInClient.getSignInIntent();
-        registrar.activity().startActivityForResult(intent, RC_SIGN_IN);
+        activity.startActivityForResult(intent, RC_SIGN_IN);
     }
 
-    private void silentSignIn(final GoogleSignInClient signInClient) {
+    private void silentSignIn(final GoogleSignInClient signInClient, final boolean silentSignInOnly) {
         signInClient.silentSignIn().addOnSuccessListener(new OnSuccessListener<GoogleSignInAccount>() {
             @Override
             public void onSuccess(GoogleSignInAccount googleSignInAccount) {
@@ -196,15 +239,20 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                Log.i(TAG, "Failed to silent signin, trying explicit signin", e);
-                explicitSignIn(signInClient);
+                if (silentSignInOnly) {
+                    Log.i(TAG, "Failed to silent signin", e);
+                    error("ERROR_SIGNIN", e);
+                } else {
+                    Log.i(TAG, "Failed to silent signin, trying explicit signin", e);
+                    explicitSignIn(signInClient);
+                }
             }
         });
     }
 
     private void handleSuccess(GoogleSignInAccount acc) {
         currentAccount = acc;
-        PlayersClient playersClient = Games.getPlayersClient(registrar.activity(), currentAccount);
+        PlayersClient playersClient = Games.getPlayersClient(context, currentAccount);
         playersClient.getCurrentPlayer().addOnSuccessListener(new OnSuccessListener<Player>() {
             @Override
             public void onSuccess(Player player) {
@@ -269,10 +317,10 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
     }
 
     public void showAchievements() {
-        Games.getAchievementsClient(registrar.activity(), currentAccount).getAchievementsIntent().addOnSuccessListener(new OnSuccessListener<Intent>() {
+        Games.getAchievementsClient(context, currentAccount).getAchievementsIntent().addOnSuccessListener(new OnSuccessListener<Intent>() {
             @Override
             public void onSuccess(Intent intent) {
-                registrar.activity().startActivityForResult(intent, RC_ACHIEVEMENT_UI);
+                activity.startActivityForResult(intent, RC_ACHIEVEMENT_UI);
                 result(new HashMap<>());
             }
         }).addOnFailureListener(new OnFailureListener() {
@@ -284,10 +332,10 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
     }
 
     public void showLeaderboard(String leaderboardId) {
-        Games.getLeaderboardsClient(registrar.activity(), currentAccount).getLeaderboardIntent(leaderboardId).addOnSuccessListener(new OnSuccessListener<Intent>() {
+        Games.getLeaderboardsClient(context, currentAccount).getLeaderboardIntent(leaderboardId).addOnSuccessListener(new OnSuccessListener<Intent>() {
             @Override
             public void onSuccess(Intent intent) {
-                registrar.activity().startActivityForResult(intent, RC_LEADERBOARD_UI);
+                activity.startActivityForResult(intent, RC_LEADERBOARD_UI);
                 result(new HashMap<>());
             }
         }).addOnFailureListener(new OnFailureListener() {
@@ -299,10 +347,10 @@ public class PlayGamesPlugin implements MethodCallHandler, ActivityResultListene
     }
 
     public void showAllLeaderboards() {
-        Games.getLeaderboardsClient(registrar.activity(), currentAccount).getAllLeaderboardsIntent().addOnSuccessListener(new OnSuccessListener<Intent>() {
+        Games.getLeaderboardsClient(context, currentAccount).getAllLeaderboardsIntent().addOnSuccessListener(new OnSuccessListener<Intent>() {
             @Override
             public void onSuccess(Intent intent) {
-                registrar.activity().startActivityForResult(intent, RC_ALL_LEADERBOARD_UI);
+                activity.startActivityForResult(intent, RC_ALL_LEADERBOARD_UI);
                 result(new HashMap<>());
             }
         }).addOnFailureListener(new OnFailureListener() {

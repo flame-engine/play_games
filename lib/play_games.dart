@@ -334,9 +334,9 @@ class PlayGames {
   }
 
   static Future<SigninResult> signIn(
-      {bool requestEmail = true, bool scopeSnapshot = false}) async {
+      {bool requestEmail = true, bool scopeSnapshot = false, bool silentSignInOnly = false}) async {
     final Map<dynamic, dynamic> map = await _channel.invokeMethod('signIn',
-        {'requestEmail': requestEmail, 'scopeSnapshot': scopeSnapshot});
+        {'requestEmail': requestEmail, 'scopeSnapshot': scopeSnapshot, 'silentSignInOnly': silentSignInOnly});
     SigninResultType type = _typeFromStr(map['type']);
     SigninResult result = new SigninResult()..type = type;
     if (type == SigninResultType.SUCCESS) {
