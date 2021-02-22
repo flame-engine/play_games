@@ -387,10 +387,10 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
     // add these four
-    implementation 'com.google.firebase:firebase-core:16.0.3'
-    implementation 'com.google.firebase:firebase-auth:16.0.3'
-    implementation 'com.google.android.gms:play-services-auth:16.0.0'
-    implementation 'com.google.android.gms:play-services-games:15.0.1'
+    implementation 'com.google.firebase:firebase-core:17.5.0';
+    implementation 'com.google.firebase:firebase-auth:19.4.0'
+    implementation 'com.google.android.gms:play-services-games:20.0.1'
+    implementation 'com.google.android.gms:play-services-auth:18.1.0'
 }
 
 // add this
@@ -404,7 +404,7 @@ Now you need to add two lines to your Android Manifest file (`android/app/src/ma
     <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version"/>
 ```
 
-`google_play_services_version` comes from the dependency you added. Now the most important, `app_id`, comes from that `games-id.xml` file you setup previously, so make sure that's that.
+`google_play_services_version` comes from the dependency you added. Now the most important, `app_id`, comes from that `games-ids.xml` file you setup previously, so make sure that's that.
 
 And... Congratulations!!! You are ready to test! After all this effort! Just drop this to your dart file:
 
