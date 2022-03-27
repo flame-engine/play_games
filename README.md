@@ -1,3 +1,5 @@
+⚠️ This is deprecated. Please use [Games Services](https://github.com/Abedalkareem/games_services) instead.
+
 # play_games
 
 Use Google Play Games Services on your Flutter app; this allows for signin and achievements so far, but more additions are very welcome. If you like it, give us a star and feel free to help and contribute.
